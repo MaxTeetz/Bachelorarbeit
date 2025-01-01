@@ -1,6 +1,5 @@
 package com.example.foldAR.kotlin.mainActivity
 
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.MutableLiveData
@@ -100,11 +99,8 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun rotateObject(motionEvent: MotionEvent, currentMain: Float) {
-
         val rotation = ((motionEvent.getX(0) - currentMain) / 1.47) % 360
         renderer.rotateAnchor(rotation.toFloat(), currentPosition.value!!)
-        Log.d("rotationTest", rotation.toString())
-
     }
 
     fun resetRotation() {

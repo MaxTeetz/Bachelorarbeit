@@ -528,7 +528,6 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
     fun rotateAnchor(rotation: Float, position: Int) {
 
-
         val pose = wrappedAnchors[position].anchor.pose
         val translation = Pose.makeTranslation(pose.tx(), pose.ty(), pose.tz())
 

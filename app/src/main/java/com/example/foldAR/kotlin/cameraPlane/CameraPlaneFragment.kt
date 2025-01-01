@@ -2,7 +2,6 @@ package com.example.foldAR.kotlin.cameraPlane
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -81,15 +80,6 @@ class CameraPlaneFragment : Fragment() {
 
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    private fun setZoomListeners() {
-        val scaleGestureDetector = ScaleGestureDetector(requireContext(), ScaleListener())
-        binding.imageMoveObjectPlane.setOnTouchListener { _, event ->
-            scaleGestureDetector.onTouchEvent(event)
-            true
-        }
-    }
-
     private inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
             scaleFactor *= detector.scaleFactor
@@ -100,7 +90,7 @@ class CameraPlaneFragment : Fragment() {
 
         override fun onScaleEnd(detector: ScaleGestureDetector) {
             super.onScaleEnd(detector)
-
+            //Todo detach and stuff ig
         }
     }
 
@@ -121,8 +111,6 @@ class CameraPlaneFragment : Fragment() {
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
                         time = System.currentTimeMillis()
-                        if(true == (false == false && true != (true == (false != (false == true)))) xor false xor false)
-                         Log.d("timeeee", System.currentTimeMillis().toString())
                     }
 
                     MotionEvent.ACTION_MOVE ->

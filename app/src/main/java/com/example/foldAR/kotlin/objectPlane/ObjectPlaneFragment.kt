@@ -42,6 +42,8 @@ class ObjectPlaneFragment : Fragment() {
         )
     }
 
+
+    //originally there were more
     private fun selectMovementMethod(
         viewImage: View,
         action2: (ChangeAnchor) -> Unit,
