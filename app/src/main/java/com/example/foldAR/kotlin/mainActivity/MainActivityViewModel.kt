@@ -29,6 +29,8 @@ class MainActivityViewModel : ViewModel() {
     private var _touchEvent: MutableLiveData<MotionEvent> = MutableLiveData()
     val touchEvent get() = _touchEvent
 
+    private var oldDegree = 0f
+
     fun setScale(scale: Float) {
         _scale.value = scale
     }
@@ -55,22 +57,25 @@ class MainActivityViewModel : ViewModel() {
         )
     }
 
-    //Todo !!!
-    fun changeAnchorPosition(view: View, angle: Float) {
+    fun changeAnchorPosition(view: View) {
         renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
-            if (touchEvent.value!!.action == MotionEvent.ACTION_MOVE) {
-                _changeAnchor.getNewPosition(
-                    touchEvent.value!!,
-                    view,
-                    pose!!,
-                    angle
-                )
+            val scaleFactorY = 500 / view.height
+            val currentTouchEvent = touchEvent.value
+
+
+            currentTouchEvent?.let {
+
+                when (it.action) {
+                    MotionEvent.ACTION_DOWN -> changeAnchor.setOffset(it.y * scaleFactorY)
+
+                    MotionEvent.ACTION_MOVE -> changeAnchor.getNewPosition(it, view, pose!!, null)
+                }
             }
-            changeAnchorsHeight(changeAnchor)
+            changeAnchorsHeight()
         }
     }
 
-    private fun changeAnchorsHeight(changeAnchor: ChangeAnchor) =
+    private fun changeAnchorsHeight() =
         renderer.moveAnchorHeight(changeAnchor.newY, currentPosition.value!!)
 
     fun changeAnchorsPlaneCamera(position: Pair<Float, Float>) =
@@ -91,5 +96,14 @@ class MainActivityViewModel : ViewModel() {
         renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
             this.pose = renderer.wrappedAnchors[currentPosition.value!!].anchor.pose
         }
+    }
+
+    fun rotateObject(motionEvent: MotionEvent, currentMain: Float) {
+        val rotation = ((motionEvent.getX(0) - currentMain) / 1.47) % 360
+        renderer.rotateAnchor(rotation.toFloat(), currentPosition.value!!)
+    }
+
+    fun resetRotation() {
+        oldDegree = 0f;
     }
 }
