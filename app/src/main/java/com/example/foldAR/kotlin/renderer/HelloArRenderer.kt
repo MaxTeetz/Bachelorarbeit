@@ -18,7 +18,7 @@ import com.example.foldAR.java.samplerender.VertexBuffer
 import com.example.foldAR.java.samplerender.arcore.BackgroundRenderer
 import com.example.foldAR.java.samplerender.arcore.PlaneRenderer
 import com.example.foldAR.java.samplerender.arcore.SpecularCubemapFilter
-import com.example.foldAR.kotlin.Constants
+import com.example.foldAR.kotlin.constants.Constants
 import com.example.foldAR.kotlin.helloar.R
 import com.example.foldAR.kotlin.mainActivity.MainActivity
 import com.google.ar.core.Anchor
@@ -43,7 +43,10 @@ import java.nio.ByteBuffer
 import java.util.Collections
 import java.util.UUID
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 /** Renders the HelloAR application using our example Renderer. */
 class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
@@ -106,8 +109,11 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     lateinit var virtualObjectAlbedoTexture: Texture
     lateinit var virtualObjectAlbedoInstantPlacementTexture: Texture
 
+    lateinit var secondAnchor: WrappedAnchor
+
     val wrappedAnchors = Collections.synchronizedList(mutableListOf<WrappedAnchor>())
-    val wrappedAnchorsLiveData = MutableLiveData<List<WrappedAnchor>>()
+    private var _reached: MutableLiveData<Boolean> = MutableLiveData(false)
+    val reached get() = _reached
 
     // Environmental HDR
     lateinit var dfgTexture: Texture
@@ -458,7 +464,6 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
         if (camera.trackingState != TrackingState.TRACKING) return
         val tap = activity.tapHelper.poll() ?: return
 
-        Log.d("wdgbzawid", "wdadwa")
         val hitResultList = if (activity.instantPlacementSettings.isInstantPlacementEnabled) {
             frame.hitTestInstantPlacement(tap.x, tap.y, APPROXIMATE_DISTANCE_METERS)
         } else {
@@ -488,19 +493,21 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             // space. This anchor is created on the Plane to place the 3D model
             // in the correct position relative both to the world and to the plane.
             val anchor = WrappedAnchor(firstHitResult.createAnchor(), firstHitResult.trackable)
+            secondAnchor = WrappedAnchor(firstHitResult.createAnchor(), firstHitResult.trackable)
 
             wrappedAnchors.add(anchor)
-            wrappedAnchorsLiveData.postValue(wrappedAnchors)
             // For devices that support the Depth API, shows a dialog to suggest enabling
             // depth-based occlusion. This dialog needs to be spawned on the UI thread.
             activity.runOnUiThread { activity.showOcclusionDialogIfNeeded() }
         }
     }
 
-    fun deleteAnchor(deletedObjectIndex: Int) {
-        wrappedAnchors[deletedObjectIndex].anchor.detach()
-        wrappedAnchors.removeAt(deletedObjectIndex)
-        wrappedAnchorsLiveData.value = wrappedAnchors
+    //deletes all anchors
+    fun deleteAnchorS() {
+        for ((i) in this.wrappedAnchors.withIndex()) {
+            wrappedAnchors[i].anchor.detach()
+            wrappedAnchors.removeAt(i)
+        }
     }
 
     private fun moveAnchor(moveX: Float, moveY: Float, moveZ: Float, position: Int) {
@@ -517,13 +524,40 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             ) //just to make it look normal
             val newPose = translation.compose(rotation)
 
-            wrappedAnchors[position].anchor.detach() //Todo optional?
+            wrappedAnchors[position].anchor.detach() //Todo error if no valid session camera obstructed or something like that
             //add to list
             val newAnchor =
                 WrappedAnchor(session!!.createAnchor(newPose), wrappedAnchors[position].trackable)
 
             wrappedAnchors[position] = newAnchor
+
+            if (wrappedAnchors.size == 2)
+                checkIfInTargetRange()
+            Log.d(
+                "NewPosObject",
+                "Anker:   ${wrappedAnchors[0].anchor.pose.tx()}   ${wrappedAnchors[0].anchor.pose.tz()}"
+            )
+            Log.d(
+                "NewPosObject",
+                "Kamera:  ${camera.value!!.pose.tx()}   ${camera.value!!.pose.tz()}"
+            )
         }
+    }
+
+    private fun checkIfInTargetRange() {
+        val a = wrappedAnchors[0].anchor.pose
+        val b = wrappedAnchors[1].anchor.pose
+
+        val distance =
+            sqrt((b.tx() - a.tx()).pow(2) + (b.ty() - a.ty()).pow(2) + (b.tz() - a.tz()).pow(2))
+
+        //get close up to 10cm
+        if (abs(distance) <= 0.1f)
+            _reached.value = true
+    }
+
+    fun resetReached() {
+        this._reached.value = false
     }
 
     fun rotateAnchor(rotation: Float, position: Int) {

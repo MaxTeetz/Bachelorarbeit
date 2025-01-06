@@ -1,4 +1,4 @@
-package com.example.foldAR.kotlin
+package com.example.foldAR.kotlin.constants
 
 object Constants {
 
@@ -10,4 +10,5 @@ object Constants {
     //For options menu
     const val sliderMin = 1f
     const val sliderMax = 5f
+    const val scaleFactor = 5f
 }

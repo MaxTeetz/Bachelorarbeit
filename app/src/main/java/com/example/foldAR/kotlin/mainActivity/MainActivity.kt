@@ -10,9 +10,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
 import com.example.foldAR.java.helpers.CameraPermissionHelper
 import com.example.foldAR.java.helpers.DepthSettings
 import com.example.foldAR.java.helpers.InstantPlacementSettings
@@ -24,7 +21,7 @@ import com.example.foldAR.kotlin.helloar.R
 import com.example.foldAR.kotlin.helloar.databinding.ActivityMainBinding
 import com.example.foldAR.kotlin.helpers.ARCoreSessionLifecycleHelper
 import com.example.foldAR.kotlin.renderer.HelloArRenderer
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.ar.core.Config
 import com.google.ar.core.Config.InstantPlacementMode
 import com.google.ar.core.Session
@@ -54,9 +51,6 @@ class MainActivity : AppCompatActivity() {
     val instantPlacementSettings = InstantPlacementSettings()
     val depthSettings = DepthSettings()
 
-    //to see whether a touch is for placement or movement
-    private var placement = true
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
@@ -68,12 +62,58 @@ class MainActivity : AppCompatActivity() {
         setupSettings()
         setupButtons()
         setUpMovementObserver()
+        setUpClickableObserver()
+        setUpNextRoundObserver()
+        setUpNextTargetObserver()
     }
 
     private fun setUpMovementObserver() {
         viewModel.touchEvent.observe(this) {
             viewModel.changeAnchorPosition(binding.surfaceview)
         }
+    }
+
+    private fun setUpClickableObserver() {
+        viewModel.clickable.observe(this) {
+            binding.settingsButton.isClickable = it
+        }
+    }
+
+    private fun setUpNextRoundObserver() {
+        viewModel.listIndex.observe(this) {
+            if (viewModel.listIndex.value == 0 && renderer.wrappedAnchors.isNotEmpty()) {
+                renderer.deleteAnchorS()
+
+                Toast.makeText(
+                    this,
+                    "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private fun setUpNextTargetObserver() {
+        renderer.reached.observe(this) {
+            if (it == true) {
+                showAlert()
+                renderer.resetReached()
+            }
+        }
+    }
+
+    //shows if target is reached
+    private fun showAlert() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(android.R.string.dialog_alert_title))
+            .setMessage("${viewModel.listIndex.value!!}/20")
+            .setCancelable(false)
+            .setPositiveButton("Nächste Runde") { dialogInterface, _ ->
+                viewModel.setIndex()
+                viewModel.placeTargetOnNewPosition()
+                dialogInterface.dismiss()
+            }
+            .show()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -84,51 +124,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupNavigation() {
 
-        val navView: BottomNavigationView = binding.navView
+//        val navView: BottomNavigationView = binding.navView
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
         navController = navHostFragment.navController
 
-        val appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.objectPlaneFragment, R.id.cameraPlaneFragment
-            )
-        )
-
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
-        navView.menu.getItem(1).isEnabled = false
-        navView.background = null
         supportActionBar?.hide()
 
     }
 
     private fun setupButtons() {
         binding.apply {
-            fab.setOnClickListener {
-                togglePlacement()
-            }
-
             settingsButton.setOnClickListener {
                 DialogObjectOptions.newInstance().show(supportFragmentManager, "")
             }
         }
-    }
-
-    //make sure its always the desired output
-    private fun togglePlacement() {
-
-        if (placement) {
-            placement = false
-            binding.fab.setImageResource(R.drawable.`object`)
-            tapHelper.onPause()
-        } else {
-            placement = true
-            binding.fab.setImageResource(R.drawable.add)
-            tapHelper.onResume()
-        }
-
     }
 
     private fun setupArCoreSessionHelper() {

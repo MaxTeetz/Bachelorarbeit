@@ -3,14 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/objectPlaneFragment">
-
-    <fragment
-        android:id="@+id/objectPlaneFragment"
-        android:name="com.example.foldAR.kotlin.objectPlane.ObjectPlaneFragment"
-        android:label="Object Plane"
-        tools:layout="@layout/fragment_object_plane">
-    </fragment>
+    app:startDestination="@id/cameraPlaneFragment">
 
     <fragment
         android:id="@+id/cameraPlaneFragment"

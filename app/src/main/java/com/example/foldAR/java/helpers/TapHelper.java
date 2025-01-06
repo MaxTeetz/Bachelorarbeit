@@ -49,8 +49,9 @@ public final class TapHelper implements OnTouchListener {
               @Override
               public boolean onSingleTapUp(MotionEvent e) {
                 // Queue tap if there is space. Tap is lost if queue is full.
-                  if(placement){
-                    queuedSingleTaps.offer(e);
+                  if(placement){ //Todo add center of screen here as a def value if camera wise isn´t working out
+                      placement = false;
+                      queuedSingleTaps.offer(e);
                 return true;
               }
                   return false;
@@ -99,13 +100,5 @@ public final class TapHelper implements OnTouchListener {
       }
 
     return gestureDetector.onTouchEvent(motionEvent);
-  }
-
-  public void onPause(){
-      this.placement = false;
-  }
-
-  public void onResume(){
-      this.placement = true;
   }
 }

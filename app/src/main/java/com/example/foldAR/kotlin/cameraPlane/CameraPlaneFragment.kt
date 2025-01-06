@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import com.example.foldAR.kotlin.constants.Constants
 import com.example.foldAR.kotlin.helloar.databinding.FragmentCameraPlaneBinding
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -28,7 +29,7 @@ class CameraPlaneFragment : Fragment() {
     private val coroutine1 = Job()
     private val coroutineScope1 = CoroutineScope(coroutine1 + Dispatchers.Main)
 
-    private var scaleFactor = 1f
+    private var scaleFactor = Constants.scaleFactor
     private var time: Long = 0
     private var previousCount = 0
 
@@ -94,7 +95,7 @@ class CameraPlaneFragment : Fragment() {
         }
     }
 
-    @SuppressLint("ClickableViewAccessibility")
+    @SuppressLint("ClickableViewAccessibility", "SuspiciousIndentation")
     private fun moveObject() {
         val scaleGestureDetector = ScaleGestureDetector(requireContext(), ScaleListener())
 
@@ -115,6 +116,7 @@ class CameraPlaneFragment : Fragment() {
 
                     MotionEvent.ACTION_MOVE ->
                         if (previousCount == 1 && System.currentTimeMillis() - time > 200) {
+                            if(event.y >= 0)
                             viewModelActivity.changeAnchorsPlaneCamera(
                                 viewModel.moveAnchors(event, binding.imageMoveObjectPlane)
                             )

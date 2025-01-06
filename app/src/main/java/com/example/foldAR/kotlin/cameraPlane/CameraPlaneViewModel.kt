@@ -7,7 +7,7 @@ import android.graphics.Paint
 import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.ViewModel
-import com.example.foldAR.kotlin.Constants
+import com.example.foldAR.kotlin.constants.Constants
 import com.example.foldAR.kotlin.renderer.WrappedAnchor
 import com.google.ar.core.Camera
 import kotlinx.coroutines.sync.Mutex

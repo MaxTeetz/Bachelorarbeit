@@ -6,7 +6,7 @@ package com.example.foldAR.kotlin.anchorManipulation
 import android.graphics.Bitmap
 import android.view.MotionEvent
 import android.view.View
-import com.example.foldAR.kotlin.Constants
+import com.example.foldAR.kotlin.constants.Constants
 import com.google.ar.core.Pose
 import kotlin.math.cos
 import kotlin.math.sin
