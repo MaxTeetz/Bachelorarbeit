@@ -28,9 +28,6 @@ class MainActivityViewModel : ViewModel() {
     private var _currentPosition: MutableLiveData<Int> = MutableLiveData(0)
     val currentPosition get() = _currentPosition
 
-    private var _listIndex: MutableLiveData<Int> = MutableLiveData(0)
-    val listIndex get() = _listIndex
-
     private var _scale: MutableLiveData<Float> = MutableLiveData<Float>(Constants.scaleFactor)
     val scale get() = _scale
 
@@ -42,15 +39,16 @@ class MainActivityViewModel : ViewModel() {
     private var _clickable: MutableLiveData<Boolean> = MutableLiveData(true)
     val clickable get() = _clickable
 
-    fun setIndex() {
+    private var _targetIndex: MutableLiveData<Int> = MutableLiveData(0)
+    val targetIndex get() = _targetIndex
 
-        _listIndex.value = _listIndex.value!! + 1
-        if (_listIndex.value!! >= 3)
-            _listIndex.value = 0
-
+    fun setTargetIndex() {
+        this._targetIndex.value?.let { _targetIndex.value = it + 1 }
     }
 
-    fun getIndex(): Int = listIndex.value!!
+    fun resetTargetIndex() {
+        this._targetIndex.value = 0
+    }
 
     fun setScale(scale: Float) {
         _scale.value = scale
@@ -128,19 +126,23 @@ class MainActivityViewModel : ViewModel() {
 
     //places object around the user; gets data from constant values
     fun placeTargetOnNewPosition() {
-        val rotation = renderer.refreshAngle()
-        val camPos = renderer.camera.value!!.pose
-        val position = ObjectCoords.positions[getIndex()]
 
-        val newX = position.first.toFloat()
-        val newZ = -position.second.toFloat()
-        val newY = position.third.toFloat()
+        if (targetIndex.value!! < 20) {
+            val rotation = renderer.refreshAngle()
+            val camPos = renderer.camera.value!!.pose
 
-        val x1 = (cos(rotation) * newX - sin(rotation) * newZ)
-        val z1 = (sin(rotation) * newX + cos(rotation) * newZ)
+            val position = ObjectCoords.positions[targetIndex.value!!]
 
-        renderer.moveAnchorPlane(x1 + camPos.tx(), -z1 + camPos.tz(), 1)
-        renderer.moveAnchorHeight((camPos.ty() + newY), 0)
+            val newX = position.first.toFloat()
+            val newZ = -position.second.toFloat()
+            val newY = position.third.toFloat()
+
+            val x1 = (cos(rotation) * newX - sin(rotation) * newZ)
+            val z1 = (sin(rotation) * newX + cos(rotation) * newZ)
+
+            renderer.moveAnchorPlane(x1 + camPos.tx(), -z1 + camPos.tz(), 1)
+            renderer.moveAnchorHeight((camPos.ty() + newY), 0)
+        }
     }
 
 }

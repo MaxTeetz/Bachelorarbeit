@@ -51,6 +51,8 @@ class MainActivity : AppCompatActivity() {
     val instantPlacementSettings = InstantPlacementSettings()
     val depthSettings = DepthSettings()
 
+    private var isAlertDialogOpen = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
@@ -63,7 +65,7 @@ class MainActivity : AppCompatActivity() {
         setupButtons()
         setUpMovementObserver()
         setUpClickableObserver()
-        //setUpNextRoundObserver()
+        setUpNextRoundObserver()
         setUpNextTargetObserver()
     }
 
@@ -80,50 +82,51 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setUpNextRoundObserver() {
-        viewModel.listIndex.observe(this) {
-            if (viewModel.listIndex.value == 0 && renderer.wrappedAnchors.isNotEmpty()) {
-                Log.d("CrashTest", "1")
-                //renderer.deleteAnchor()
-
-                Log.d("CrashTest", "2")
-
+        viewModel.targetIndex.observe(this) {
+            if (it == 2) {
+                renderer.deleteAnchor()
+                viewModel.resetTargetIndex()
                 Toast.makeText(
                     this,
                     "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
                     Toast.LENGTH_LONG
                 ).show()
-
-                Log.d("CrashTest", "3")
-
                 viewModel.setClickable(true)
-                Log.d("CrashTest", "4")
-
+                tapHelper.onResume()
             }
         }
     }
 
     private fun setUpNextTargetObserver() {
         renderer.reached.observe(this) {
-            if (it == true && viewModel.listIndex.value!! > 0) {
-                showAlert()
+            if (it == true) {
+
                 renderer.resetReached()
+                showAlert()
+
             }
         }
     }
 
     //shows if target is reached
     private fun showAlert() {
+        if (isAlertDialogOpen) {
+            return
+        }
+        isAlertDialogOpen = true
+
         MaterialAlertDialogBuilder(this)
             .setTitle(getString(android.R.string.dialog_alert_title))
-            .setMessage("${viewModel.listIndex.value!!}/20")
+            .setMessage("${viewModel.targetIndex.value!!}/20")
             .setCancelable(false)
-            .setPositiveButton("Nächste Runde") { dialogInterface, _ ->
-                viewModel.setIndex()
-                viewModel.placeTargetOnNewPosition()
-                viewModel.placeObjectInFocus()
+            .setPositiveButton("Nächste Runde") { dialogInterface, a -> //Todo disable reached until both are placed
+                viewModel.setTargetIndex()
+                if (renderer.wrappedAnchors.isNotEmpty()) {
+                    viewModel.placeTargetOnNewPosition()
+                    viewModel.placeObjectInFocus()
+                }
                 dialogInterface.dismiss()
-                Log.d("AlertTest", viewModel.listIndex.value!!.toString())
-            }
+            }.setOnDismissListener { isAlertDialogOpen = false }
             .show()
     }
 

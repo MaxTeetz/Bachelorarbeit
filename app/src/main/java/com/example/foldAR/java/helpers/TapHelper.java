@@ -29,7 +29,7 @@ public final class TapHelper implements OnTouchListener {
 
 
     //simple check to see if placement or moving action
-    private Boolean placement = true;
+    Boolean placement = true; //Todo for not lazy person
 
   private final GestureDetector gestureDetector;
   private final BlockingQueue<MotionEvent> queuedSingleTaps = new ArrayBlockingQueue<>(16);
@@ -101,4 +101,9 @@ public final class TapHelper implements OnTouchListener {
 
     return gestureDetector.onTouchEvent(motionEvent);
   }
+
+    public void onResume(){
+        this.placement = true;
+    }
+
 }

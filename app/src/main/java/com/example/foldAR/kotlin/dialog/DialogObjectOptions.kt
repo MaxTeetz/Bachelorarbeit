@@ -1,6 +1,5 @@
 package com.example.foldAR.kotlin.dialog
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
@@ -10,7 +9,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
-import com.example.foldAR.kotlin.helloar.R
 import com.example.foldAR.kotlin.helloar.databinding.DialogObjectOptionsBinding
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel
 
@@ -48,19 +46,6 @@ class DialogObjectOptions : DialogFragment() {
         }
     }
 
-    private fun startTest() {
-        if (viewModelMainActivity.renderer.wrappedAnchors.isEmpty())
-            Toast.makeText(requireContext(), "Please place Object first", Toast.LENGTH_LONG).show()
-        else {
-            viewModelMainActivity.createTarget()
-            viewModelMainActivity.setClickable(false)
-            viewModelMainActivity.placeTargetOnNewPosition()
-            viewModelMainActivity.placeObjectInFocus()
-
-            this.dismiss()
-        }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -74,7 +59,6 @@ class DialogObjectOptions : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setUpListener()
-        setText()
 
     }
 
@@ -84,9 +68,17 @@ class DialogObjectOptions : DialogFragment() {
         }
     }
 
-    @SuppressLint("StringFormatMatches")
-    private fun setText() {
-        binding.progress.text = getString(R.string.numOutOf20, viewModelMainActivity.getIndex())
+    private fun startTest() {
+        if (viewModelMainActivity.renderer.wrappedAnchors.isEmpty())
+            Toast.makeText(requireContext(), "Please place Object first", Toast.LENGTH_LONG).show()
+        else {
+            viewModelMainActivity.createTarget()
+            viewModelMainActivity.setClickable(false)
+            viewModelMainActivity.placeTargetOnNewPosition()
+            viewModelMainActivity.placeObjectInFocus()
+
+            this.dismiss()
+        }
     }
 
     override fun onResume() {

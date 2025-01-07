@@ -506,13 +506,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
     //deletes all anchors
     fun deleteAnchor() {
-        wrappedAnchors[0].anchor.detach()
-        wrappedAnchors.removeAt(0)
-        wrappedAnchorsLiveData.value = wrappedAnchors
-
-        wrappedAnchors[1].anchor.detach()
-        wrappedAnchors.removeAt(1)
-        wrappedAnchorsLiveData.value = wrappedAnchors
+        wrappedAnchors.clear()
     }
 
     private fun moveAnchor(moveX: Float, moveY: Float, moveZ: Float, position: Int) {
@@ -557,7 +551,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             sqrt((b.tx() - a.tx()).pow(2) + (b.ty() - a.ty()).pow(2) + (b.tz() - a.tz()).pow(2))
 
         //get close up to 10cm
-        if (abs(distance) <= 1f)
+        if (abs(distance) <= .5f)
             _reached.value = true
     }
 
