@@ -53,8 +53,10 @@ class DialogObjectOptions : DialogFragment() {
             Toast.makeText(requireContext(), "Please place Object first", Toast.LENGTH_LONG).show()
         else {
             viewModelMainActivity.createTarget()
-            viewModelMainActivity.setIndex()
             viewModelMainActivity.setClickable(false)
+            viewModelMainActivity.placeTargetOnNewPosition()
+            viewModelMainActivity.placeObjectInFocus()
+
             this.dismiss()
         }
     }

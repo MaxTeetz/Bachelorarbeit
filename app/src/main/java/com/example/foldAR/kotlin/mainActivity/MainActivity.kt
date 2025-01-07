@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
         setupButtons()
         setUpMovementObserver()
         setUpClickableObserver()
-        setUpNextRoundObserver()
+        //setUpNextRoundObserver()
         setUpNextTargetObserver()
     }
 
@@ -82,20 +82,29 @@ class MainActivity : AppCompatActivity() {
     private fun setUpNextRoundObserver() {
         viewModel.listIndex.observe(this) {
             if (viewModel.listIndex.value == 0 && renderer.wrappedAnchors.isNotEmpty()) {
-                renderer.deleteAnchorS()
+                Log.d("CrashTest", "1")
+                //renderer.deleteAnchor()
+
+                Log.d("CrashTest", "2")
 
                 Toast.makeText(
                     this,
                     "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
                     Toast.LENGTH_LONG
                 ).show()
+
+                Log.d("CrashTest", "3")
+
+                viewModel.setClickable(true)
+                Log.d("CrashTest", "4")
+
             }
         }
     }
 
     private fun setUpNextTargetObserver() {
         renderer.reached.observe(this) {
-            if (it == true) {
+            if (it == true && viewModel.listIndex.value!! > 0) {
                 showAlert()
                 renderer.resetReached()
             }
@@ -111,7 +120,9 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("Nächste Runde") { dialogInterface, _ ->
                 viewModel.setIndex()
                 viewModel.placeTargetOnNewPosition()
+                viewModel.placeObjectInFocus()
                 dialogInterface.dismiss()
+                Log.d("AlertTest", viewModel.listIndex.value!!.toString())
             }
             .show()
     }

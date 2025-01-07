@@ -1,6 +1,5 @@
 package com.example.foldAR.kotlin.mainActivity
 
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.MutableLiveData
@@ -46,9 +45,9 @@ class MainActivityViewModel : ViewModel() {
     fun setIndex() {
 
         _listIndex.value = _listIndex.value!! + 1
-        Log.d("IndexNumber", listIndex.value.toString())
-        if (listIndex.value!! >= 5)
+        if (_listIndex.value!! >= 3)
             _listIndex.value = 0
+
     }
 
     fun getIndex(): Int = listIndex.value!!
@@ -131,7 +130,7 @@ class MainActivityViewModel : ViewModel() {
     fun placeTargetOnNewPosition() {
         val rotation = renderer.refreshAngle()
         val camPos = renderer.camera.value!!.pose
-        val position = ObjectCoords.positions[getIndex() - 1]
+        val position = ObjectCoords.positions[getIndex()]
 
         val newX = position.first.toFloat()
         val newZ = -position.second.toFloat()
