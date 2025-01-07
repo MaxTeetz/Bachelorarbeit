@@ -51,6 +51,8 @@ class MainActivity : AppCompatActivity() {
     val instantPlacementSettings = InstantPlacementSettings()
     val depthSettings = DepthSettings()
 
+    private val maxTargets = 2
+
     private var isAlertDialogOpen = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,7 +85,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpNextRoundObserver() {
         viewModel.targetIndex.observe(this) {
-            if (it == 2) {
+            if (it == maxTargets) {
                 renderer.deleteAnchor()
                 viewModel.resetTargetIndex()
                 Toast.makeText(
@@ -117,7 +119,7 @@ class MainActivity : AppCompatActivity() {
 
         MaterialAlertDialogBuilder(this)
             .setTitle(getString(android.R.string.dialog_alert_title))
-            .setMessage("${viewModel.targetIndex.value!!}/20")
+            .setMessage("${viewModel.targetIndex.value!! + 1}/20")
             .setCancelable(false)
             .setPositiveButton("Nächste Runde") { dialogInterface, a -> //Todo disable reached until both are placed
                 viewModel.setTargetIndex()
