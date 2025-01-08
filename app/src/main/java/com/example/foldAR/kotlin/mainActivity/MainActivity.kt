@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.util.Log
+import android.view.ViewTreeObserver
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -16,6 +17,7 @@ import com.example.foldAR.java.helpers.InstantPlacementSettings
 import com.example.foldAR.java.helpers.SnackbarHelper
 import com.example.foldAR.java.helpers.TapHelper
 import com.example.foldAR.java.samplerender.SampleRender
+import com.example.foldAR.kotlin.constants.Constants.maxTargets
 import com.example.foldAR.kotlin.dialog.DialogObjectOptions
 import com.example.foldAR.kotlin.helloar.R
 import com.example.foldAR.kotlin.helloar.databinding.ActivityMainBinding
@@ -51,7 +53,6 @@ class MainActivity : AppCompatActivity() {
     val instantPlacementSettings = InstantPlacementSettings()
     val depthSettings = DepthSettings()
 
-    private val maxTargets = 2
 
     private var isAlertDialogOpen = false
 
@@ -65,52 +66,52 @@ class MainActivity : AppCompatActivity() {
         setupRenderer()
         setupSettings()
         setupButtons()
+        setScale()
         setUpMovementObserver()
         setUpClickableObserver()
         setUpNextRoundObserver()
         setUpNextTargetObserver()
     }
 
-    private fun setUpMovementObserver() {
-        viewModel.touchEvent.observe(this) {
-            viewModel.changeAnchorPosition(binding.surfaceview)
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupBinding() {
+        surfaceView = findViewById(R.id.surfaceview)
+        tapHelper = TapHelper(this, viewModel).also {
+            surfaceView.setOnTouchListener(it)
         }
     }
 
-    private fun setUpClickableObserver() {
-        viewModel.clickable.observe(this) {
-            binding.settingsButton.isClickable = it
-        }
+    private fun setupNavigation() {
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
+        navController = navHostFragment.navController
+        supportActionBar?.hide()
     }
 
-    private fun setUpNextRoundObserver() {
-        viewModel.targetIndex.observe(this) {
-            if (it == maxTargets) {
-                renderer.deleteAnchor()
-                viewModel.resetTargetIndex()
-                Toast.makeText(
-                    this,
-                    "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
-                    Toast.LENGTH_LONG
-                ).show()
-                viewModel.setClickable(true)
-                tapHelper.onResume()
+    //start scenario/ next round button
+    private fun setupButtons() {
+        binding.apply {
+            settingsButton.setOnClickListener {
+                DialogObjectOptions.newInstance().show(supportFragmentManager, "")
             }
         }
     }
 
-    private fun setUpNextTargetObserver() {
-        renderer.reached.observe(this) {
-            if (it == true) {
+    //gets view width after its completely inflated
+    private fun setScale() {
+        binding.surfaceview.viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                // Ensure this only happens once
+                binding.surfaceview.viewTreeObserver.removeOnGlobalLayoutListener(this)
 
-                renderer.resetReached()
-                showAlert()
-
+                // Now that the view is fully laid out, set the scale factor
+                viewModel.setScaleFactor(binding.surfaceview)
             }
-        }
+        })
     }
 
-    //shows if target is reached
+    //shows alert if target is reached
     private fun showAlert() {
         if (isAlertDialogOpen) {
             return
@@ -121,7 +122,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle(getString(android.R.string.dialog_alert_title))
             .setMessage("${viewModel.targetIndex.value!! + 1}/20")
             .setCancelable(false)
-            .setPositiveButton("Nächste Runde") { dialogInterface, a -> //Todo disable reached until both are placed
+            .setPositiveButton("Nächste Runde") { dialogInterface, _ -> //Todo disable reached until both are placed
                 viewModel.setTargetIndex()
                 if (renderer.wrappedAnchors.isNotEmpty()) {
                     viewModel.placeTargetOnNewPosition()
@@ -132,32 +133,9 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    private fun setupBinding() {
-        surfaceView = findViewById(R.id.surfaceview)
-        tapHelper = TapHelper(this, viewModel).also { surfaceView.setOnTouchListener(it) }
-    }
-
-    private fun setupNavigation() {
-
-//        val navView: BottomNavigationView = binding.navView
-
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
-        navController = navHostFragment.navController
-
-        supportActionBar?.hide()
-
-    }
-
-    private fun setupButtons() {
-        binding.apply {
-            settingsButton.setOnClickListener {
-                DialogObjectOptions.newInstance().show(supportFragmentManager, "")
-            }
-        }
-    }
-
+    /**
+     * ArCore functions
+     **/
     private fun setupArCoreSessionHelper() {
         arCoreSessionHelper = ARCoreSessionLifecycleHelper(this)
 
@@ -248,6 +226,60 @@ class MainActivity : AppCompatActivity() {
             }.setNegativeButton(R.string.button_text_disable_depth) { _, _ ->
                 this.depthSettings.setUseDepthForOcclusion(false)
             }.show()
+    }
+
+    /**
+     * Observers
+     **/
+    //height movement and rotation
+    private fun setUpMovementObserver() {
+        viewModel.touchEvent.observe(this) {
+            viewModel.changeAnchorPosition()
+        }
+    }
+
+    //change button outcome
+    private fun setUpClickableObserver() {
+        viewModel.clickable.observe(this) {
+            /*(binding.fragmentContainer.parent as ViewGroup).removeView(binding.fragmentContainer)
+            val layoutParams = binding.surfaceview.layoutParams as ConstraintLayout.LayoutParams
+            layoutParams.height = ConstraintLayout.LayoutParams.MATCH_PARENT
+            layoutParams.width = ConstraintLayout.LayoutParams.MATCH_PARENT
+            binding.surfaceview.layoutParams = layoutParams
+
+            binding.surfaceview.requestLayout()*/
+
+            binding.settingsButton.isClickable = it
+        }
+    }
+
+    //next scenario i.e. folded or unfolded
+    private fun setUpNextRoundObserver() {
+        viewModel.targetIndex.observe(this) {
+            if (it == maxTargets) {
+                renderer.deleteAnchor()
+                viewModel.resetTargetIndex()
+                Toast.makeText(
+                    this,
+                    "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
+                    Toast.LENGTH_LONG
+                ).show()
+                viewModel.setClickable(true)
+                tapHelper.onResume()
+            }
+        }
+    }
+
+    //next target within scenario
+    private fun setUpNextTargetObserver() {
+        renderer.reached.observe(this) {
+            if (it == true) {
+
+                renderer.resetReached()
+                showAlert()
+
+            }
+        }
     }
 
     override fun onResume() {

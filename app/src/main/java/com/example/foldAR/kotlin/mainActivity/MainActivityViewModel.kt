@@ -1,6 +1,5 @@
 package com.example.foldAR.kotlin.mainActivity
 
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.MutableLiveData
@@ -26,6 +25,7 @@ class MainActivityViewModel : ViewModel() {
     private var _currentPosition: MutableLiveData<Int> = MutableLiveData(0)
     val currentPosition get() = _currentPosition
 
+    //map scaling
     private var _scale: MutableLiveData<Float> = MutableLiveData<Float>(Constants.scaleFactor)
     val scale get() = _scale
 
@@ -41,6 +41,8 @@ class MainActivityViewModel : ViewModel() {
     val targetIndex get() = _targetIndex
 
     private var initialY = 0f
+
+    private var viewScale = 0f;
 
     fun setTargetIndex() {
         this._targetIndex.value?.let { _targetIndex.value = it + 1 }
@@ -68,18 +70,18 @@ class MainActivityViewModel : ViewModel() {
     }
 
 
-    fun changeAnchorPosition(view: View) {
+    //Todo eventually performance issues due to unnecessary calculations
+    fun changeAnchorPosition() {
+
         renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
-            val scaleFactorY = 500 / view.height
+
             val currentTouchEvent = touchEvent.value
 
             currentTouchEvent?.let {
                 when (it.action) {
 
                     MotionEvent.ACTION_MOVE -> {
-                        Log.d("MovementTest", scaleFactorY.toString())
-
-                        setHeight(it.y, scaleFactorY)
+                        setHeight(it.y)
                     }
                 }
             }
@@ -88,14 +90,18 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
+    fun setScaleFactor(view: View) {
+        this.viewScale = (Constants.bitmapSize.toFloat() / view.height.toFloat())
+    }
+
     fun setInitialY(y: Float) {
         initialY = y
     }
 
-    private fun setHeight(newY: Float, scaleFactor: Int) {
+    private fun setHeight(newY: Float) {
 
         val currentHeight = pose!!.ty()
-        val addedHeight = ((initialY - newY) * scaleFactor)
+        val addedHeight = ((initialY - newY) * viewScale) / 500
         val newHeight = currentHeight + addedHeight
 
         this.newHeight = newHeight
@@ -158,5 +164,4 @@ class MainActivityViewModel : ViewModel() {
             renderer.moveAnchorHeight((camPos.ty() + newY), 0)
         }
     }
-
 }

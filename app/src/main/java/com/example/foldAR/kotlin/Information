@@ -69,3 +69,10 @@ val Z1 = sin(rotation) * x + cos(rotation) * Z
 8)Delete Object
 9)Select new Object
 10)Delete all Objects
+
+
+//Database
+User (id, name)
+   └── Scenario (id, userId, name)
+         └── Test Case (id, scenarioId, name)
+               └── Test Case Data (id, testCaseId, cameraPosition, startTime, endTime, clicks)

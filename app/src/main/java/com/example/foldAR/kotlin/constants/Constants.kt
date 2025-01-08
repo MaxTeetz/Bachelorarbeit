@@ -11,4 +11,8 @@ object Constants {
     const val sliderMin = 1f
     const val sliderMax = 5f
     const val scaleFactor = 5f
+
+    //For testing
+    const val maxTargets = 2
+
 }
