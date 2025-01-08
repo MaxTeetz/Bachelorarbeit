@@ -40,7 +40,7 @@ class MainActivityViewModel : ViewModel() {
     private var _targetIndex: MutableLiveData<Int> = MutableLiveData(0)
     val targetIndex get() = _targetIndex
 
-    private var offset = 0f
+    private var initialY = 0f
 
     fun setTargetIndex() {
         this._targetIndex.value?.let { _targetIndex.value = it + 1 }
@@ -73,13 +73,14 @@ class MainActivityViewModel : ViewModel() {
             val scaleFactorY = 500 / view.height
             val currentTouchEvent = touchEvent.value
 
-
             currentTouchEvent?.let {
-
                 when (it.action) {
-                    MotionEvent.ACTION_DOWN -> setOffset(it.y)
 
-                    MotionEvent.ACTION_MOVE -> setHeight(it.y, scaleFactorY)
+                    MotionEvent.ACTION_MOVE -> {
+                        Log.d("MovementTest", scaleFactorY.toString())
+
+                        setHeight(it.y, scaleFactorY)
+                    }
                 }
             }
             renderer.moveAnchorHeight(newHeight, 0)
@@ -87,29 +88,19 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-
-
-    private fun setOffset(y: Float) {
-        Log.d("anchorHeight", "New:  ${"test"}")
-
-        this.offset = y
+    fun setInitialY(y: Float) {
+        initialY = y
     }
 
-    private fun setHeight(y: Float, scaleFactorY: Int) {
+    private fun setHeight(newY: Float, scaleFactor: Int) {
 
         val currentHeight = pose!!.ty()
-        Log.d("anchorHeight", "Current: ${currentHeight.toString()}")
-
-        val newHeight = currentHeight - (y * scaleFactorY / offset)
-
-        Log.d("anchorHeight", "New:  ${newHeight.toString()}")
-        Log.d("anchorHeight", "Y:  ${y.toString()}")
-        Log.d("anchorHeight", "Offset:  ${offset.toString()}")
-
+        val addedHeight = ((initialY - newY) * scaleFactor)
+        val newHeight = currentHeight + addedHeight
 
         this.newHeight = newHeight
-    }
 
+    }
 
     fun changeAnchorsPlaneCamera(position: Pair<Float, Float>) =
         renderer.moveAnchorPlane(position.first, position.second, currentPosition.value!!)

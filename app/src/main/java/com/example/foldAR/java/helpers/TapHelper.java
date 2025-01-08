@@ -88,6 +88,7 @@ public final class TapHelper implements OnTouchListener {
 
       if(!placement){
           if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+              viewModel.setInitialY(motionEvent.getY());
               time = System.currentTimeMillis();
               viewModel.setPose();
           }
