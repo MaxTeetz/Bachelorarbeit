@@ -11,6 +11,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import com.example.foldAR.data.AppDatabase
+import com.example.foldAR.data.DatabaseApplication
 import com.example.foldAR.java.helpers.CameraPermissionHelper
 import com.example.foldAR.java.helpers.DepthSettings
 import com.example.foldAR.java.helpers.InstantPlacementSettings
@@ -37,6 +39,11 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivityTest"
     }
+
+    private val database: AppDatabase by lazy {
+        (application as DatabaseApplication).database
+    }
+
 
     private lateinit var navController: NavController
     private lateinit var _binding: ActivityMainBinding

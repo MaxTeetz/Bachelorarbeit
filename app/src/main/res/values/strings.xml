@@ -46,6 +46,6 @@
     <string name="delete_all">Nächstes Objekt</string>
     <string name="numOutOf20">%1$s/20</string>
     <string name="start">Start</string>
-    <string name="dr_cke_auf_start_um_den_test_zu_starten">Drücke auf Start, um den Test zu starten!</string>
+    <string name="dr_cke_auf_start_um_den_test_zu_starten">Gib deinen Namen ein und drücke auf Start, um den Test zu starten!</string>
 
 </resources>
