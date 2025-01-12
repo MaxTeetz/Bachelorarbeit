@@ -1,9 +1,7 @@
 package com.example.foldAR.data
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.foldAR.data.daos.DataSetsDAO
 import com.example.foldAR.data.daos.ScenariosDAO
@@ -12,8 +10,10 @@ import com.example.foldAR.data.daos.UsersDAO
 import com.example.foldAR.data.entities.DataSet
 import com.example.foldAR.data.entities.Scenario
 import com.example.foldAR.data.entities.TestCase
-import com.example.foldAR.data.entities.Users
+import com.example.foldAR.data.entities.User
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class DatabaseViewModel(
     private val usersDAO: UsersDAO,
@@ -22,7 +22,7 @@ class DatabaseViewModel(
     private val dataSetsDAO: DataSetsDAO
 ) : ViewModel() {
 
-    fun insertUser(user: Users) {
+    fun insertUser(user: User) {
         viewModelScope.launch {
             usersDAO.insertUser(user)
         }
@@ -46,11 +46,38 @@ class DatabaseViewModel(
         }
     }
 
-    fun getLastTestCase(): LiveData<TestCase> {
-        return testCaseDAO.getLastTestCase().asLiveData()
+    suspend fun getLastUser(): User? {
+        return withContext(Dispatchers.IO) {
+            usersDAO.getLastUser()
+        }
     }
 
-    fun deleteDataSet(testCaseId: Int) {
+    suspend fun userGetScenario(id: Int): List<Scenario>? {
+        return withContext(Dispatchers.IO) {
+            scenariosDAO.getScenariosByUserId(id)
+        }
+    }
+
+    //if testCase done just start dialog after setting testCase and scenario number else
+    suspend fun scenarioGetTestCases(id: Int): List<TestCase> {
+        return withContext(Dispatchers.IO) {
+            testCaseDAO.getTestCaseByScenarioId(id)
+        }
+    }
+
+    //if app crashes and testCase is not finished, delete the data for it to fill it again
+    suspend fun getLastTestCase(id: Int): Boolean {
+        return withContext(Dispatchers.IO) {
+            val testCase = testCaseDAO.getLastTestCase()
+            if (testCase.EndTime == null) {
+                deleteDataSet(testCase.TestCaseID)
+                true
+            } else
+                false
+        }
+    }
+
+    private fun deleteDataSet(testCaseId: Int) {
         viewModelScope.launch {
             dataSetsDAO.deleteDataSetsForTestCase(testCaseId)
         }
@@ -61,12 +88,13 @@ class DatabaseViewModelFactory(
     private val usersDAO: UsersDAO,
     private val scenariosDAO: ScenariosDAO,
     private val testCaseDAO: TestCaseDAO,
-    private val dataSetsDAO: DataSetsDAO) : ViewModelProvider.Factory {
+    private val dataSetsDAO: DataSetsDAO
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if(modelClass.isAssignableFrom(DatabaseViewModel::class.java)){
+        if (modelClass.isAssignableFrom(DatabaseViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return DatabaseViewModel(usersDAO, scenariosDAO, testCaseDAO, dataSetsDAO) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
-    }
+}

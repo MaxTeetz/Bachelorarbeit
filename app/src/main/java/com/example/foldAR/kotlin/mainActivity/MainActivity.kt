@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity() {
 
     private var isAlertDialogOpen = false
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
@@ -78,6 +79,11 @@ class MainActivity : AppCompatActivity() {
         setUpClickableObserver()
         setUpNextRoundObserver()
         setUpNextTargetObserver()
+        setUpDatabase()
+    }
+
+    private fun setUpDatabase() {
+        viewModel.setUpDatabase(database)
     }
 
     @SuppressLint("ClickableViewAccessibility")

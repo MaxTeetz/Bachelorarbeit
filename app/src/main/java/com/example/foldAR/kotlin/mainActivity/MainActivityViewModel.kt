@@ -4,6 +4,11 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.foldAR.data.AppDatabase
+import com.example.foldAR.data.entities.DataSet
+import com.example.foldAR.data.entities.Scenario
+import com.example.foldAR.data.entities.TestCase
+import com.example.foldAR.data.entities.User
 import com.example.foldAR.kotlin.constants.Constants
 import com.example.foldAR.kotlin.constants.ObjectCoords
 import com.example.foldAR.kotlin.renderer.HelloArRenderer
@@ -15,6 +20,8 @@ import kotlin.math.sin
 /**The viewModel handles the renderer as well as the delegation of the calculated data inside
  *  the fragments to the renderer**/
 class MainActivityViewModel : ViewModel() {
+
+    private lateinit var database: AppDatabase
 
     private var pose: Pose? = null
     private var newHeight = 0f
@@ -164,4 +171,33 @@ class MainActivityViewModel : ViewModel() {
             renderer.moveAnchorHeight((camPos.ty() + newY), 0)
         }
     }
+
+    fun setUpDatabase(database: AppDatabase) {
+        this.database = database
+    }
+
+    fun saveName(user: User) {
+    }
+
+    fun saveScenario(scenario: Scenario) {
+
+    }
+
+    fun getScenarioByUserId(userId: Int): Scenario? {
+        TODO()
+    }
+
+    fun saveTestCase(testCase: TestCase) {
+
+    }
+
+    fun saveDataSet(dataSet: DataSet) {
+
+    }
+
+    fun deleteDataSetFromTestCase(testCaseId: Int) {
+
+    }
+
+
 }

@@ -12,7 +12,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.foldAR.data.AppDatabase
 import com.example.foldAR.data.DatabaseApplication
-import com.example.foldAR.data.entities.Users
 import com.example.foldAR.kotlin.helloar.databinding.DialogObjectOptionsBinding
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel
 import com.example.foldAR.kotlin.renderer.WrappedAnchor
@@ -102,8 +101,9 @@ class DialogObjectOptions : DialogFragment() {
 
     private fun startTest(name: String) {
 
+
         lifecycleScope.launch {
-            database.usersDao().insertUser(Users(Username = name))
+            viewModelMainActivity.saveName()
         }
 
         viewModelMainActivity.createTarget()

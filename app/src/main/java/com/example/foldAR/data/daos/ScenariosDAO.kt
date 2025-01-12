@@ -10,6 +10,6 @@ interface ScenariosDAO {
     @Insert
     suspend fun insertScenario(scenario: Scenario)
 
-    @Query("SELECT * FROM Scenario WHERE UserID = :userId")
-    suspend fun getScenariosByUserId(userId: Int): List<Scenario>
+    @Query("SELECT * FROM Scenario WHERE UserID = :userId ORDER BY ScenarioID DESC")
+    suspend fun getScenariosByUserId(userId: Int): List<Scenario>?
 }
