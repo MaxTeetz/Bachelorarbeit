@@ -551,7 +551,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             sqrt((b.tx() - a.tx()).pow(2) + (b.ty() - a.ty()).pow(2) + (b.tz() - a.tz()).pow(2))
 
         //get close up to 10cm
-        if (abs(distance) <= .5f)
+        if (abs(distance) <= .5f && !reached.value!!)
             _reached.value = true
     }
 

@@ -13,6 +13,6 @@ object Constants {
     const val scaleFactor = 5f
 
     //For testing
-    const val maxTargets = 2
+    const val maxTargets = 19
 
 }

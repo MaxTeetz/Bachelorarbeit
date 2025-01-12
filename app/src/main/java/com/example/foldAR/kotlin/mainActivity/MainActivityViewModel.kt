@@ -1,5 +1,6 @@
 package com.example.foldAR.kotlin.mainActivity
 
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.MutableLiveData
@@ -194,7 +195,7 @@ class MainActivityViewModel : ViewModel() {
 
     fun setLastUser() {
         viewModelScope.launch(Dispatchers.IO) {
-            _currentUser.value = database.getLastUser()
+            _currentUser.postValue(database.getLastUser())
         }
     }
 
@@ -206,8 +207,7 @@ class MainActivityViewModel : ViewModel() {
                 _currentUser.value = null
             } else {
                 viewModelScope.launch(Dispatchers.IO) {
-                    _currentScenario.value =
-                        database.getLastScenarioByUserId(currentUser.value!!.UserID)
+                    _currentScenario.postValue(database.getLastScenarioByUserId(currentUser.value!!.UserID))
                 }
             }
         }
@@ -219,8 +219,7 @@ class MainActivityViewModel : ViewModel() {
             createNewScenario()
         } else
             viewModelScope.launch(Dispatchers.IO) {
-                _currentTestCase.value =
-                    database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID)
+                _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
             }
     }
 
@@ -252,66 +251,64 @@ class MainActivityViewModel : ViewModel() {
     }
 
     private fun createNewScenario() {
-        val scenarioName: Int = currentScenario.value?.ScenarioName?.plus(1) ?: 0
+        Log.d("TestingDatabase", "scenario")
 
-        val scenario = Scenario(
-            UserID = currentUser.value!!.UserID,
-            ScenarioName = scenarioName
-        )
+        if (currentUser.value != null) {
+            val scenarioName: Int = currentScenario.value?.ScenarioName?.plus(1) ?: 0
 
-        viewModelScope.launch(Dispatchers.IO) {
-            database.insertScenario(scenario)
-            currentScenario.value = database.getLastScenarioByUserId(currentUser.value!!.UserID)
+            val scenario = Scenario(
+                UserID = currentUser.value!!.UserID,
+                ScenarioName = scenarioName
+            )
+
+            viewModelScope.launch(Dispatchers.IO) {
+                database.insertScenario(scenario)
+                _currentScenario.postValue(database.getLastScenarioByUserId(currentUser.value!!.UserID))
+            }
         }
     }
 
     private fun setUserDone() { //Todo check completely
         viewModelScope.launch(Dispatchers.IO) {
             database.updateUser(currentUser.value!!.UserID)
-            _currentUser.value = database.getLastUser()
+            _currentUser.postValue(database.getLastUser())
         }
     }
 
     private fun createTestCase() {
 
-        val testCase = TestCase(
-            ScenarioID = currentScenario.value!!.ScenarioID,
-            TestCaseName = targetIndex.value!! + 1,
-            StartTime = System.currentTimeMillis().toString(),
-            EndTime = null
-        )
+        Log.d("TestingDatabase", "testcase")
+        if (currentUser.value != null && currentScenario.value != null) {
+            val testCase = TestCase(
+                ScenarioID = currentScenario.value!!.ScenarioID,
+                TestCaseName = targetIndex.value!! + 1,
+                StartTime = System.currentTimeMillis().toString(),
+                EndTime = null
+            )
 
-        viewModelScope.launch(Dispatchers.IO) {
-            database.insertTestCase(testCase)
+            viewModelScope.launch(Dispatchers.IO) {
+                database.insertTestCase(testCase)
 
-            currentTestCase.value =
-                database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID)
+                _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
+            }
         }
     }
 
 
     fun updateTestCase() {
         val currentTime = System.currentTimeMillis().toString()
-        val curTestCase = currentTestCase.value!!
-
-        val testCase = TestCase(
-            TestCaseID = curTestCase.TestCaseID,
-            ScenarioID = curTestCase.ScenarioID,
-            TestCaseName = curTestCase.TestCaseName,
-            StartTime = curTestCase.StartTime,
-            EndTime = System.currentTimeMillis().toString()
-        )
+        Log.d("SpecificTest", "testing the update")
 
         viewModelScope.launch(Dispatchers.IO) {
             database.updateTestCase(currentTime, currentTestCase.value!!.TestCaseID)
-            currentTestCase.value = testCase
+            _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
         }
     }
 
     fun insertUser(name: String) {
         viewModelScope.launch(Dispatchers.IO) {
             database.insertUser(User(Username = name))
-            _currentUser
+            _currentUser.postValue(database.getLastUser())
         }
     }
 }

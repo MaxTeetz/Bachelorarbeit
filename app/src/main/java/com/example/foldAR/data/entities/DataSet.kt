@@ -2,6 +2,7 @@ package com.example.foldAR.data.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
@@ -10,7 +11,7 @@ import androidx.room.PrimaryKey
         parentColumns = ["TestCaseID"],
         childColumns = ["TestCaseID"],
         onDelete = ForeignKey.CASCADE
-    )]
+    )], indices = [Index(value = ["TestCaseID"])]
 )
 data class DataSet(
     @PrimaryKey(autoGenerate = true) val DataSetID: Int = 0,
