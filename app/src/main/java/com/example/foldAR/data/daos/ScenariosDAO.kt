@@ -13,6 +13,4 @@ interface ScenariosDAO {
     @Query("SELECT * FROM Scenario WHERE UserID = :userId ORDER BY ScenarioID DESC LIMIT 1")
     suspend fun getLastScenarioOfUser(userId: Int): Scenario?
 
-    @Query("UPDATE SCENARIO SET TestCaseNumber = :testCaseNumber WHERE ScenarioID = :scenarioID")
-    suspend fun updateTestCaseNumber(testCaseNumber: Int, scenarioID: Int)
 }

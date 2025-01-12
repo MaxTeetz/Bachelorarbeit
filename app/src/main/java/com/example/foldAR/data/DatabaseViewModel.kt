@@ -34,7 +34,7 @@ class DatabaseViewModel(
         }
     }
 
-    fun insertTestCase(testCase: TestCase) {
+    suspend fun insertTestCase(testCase: TestCase) {
         viewModelScope.launch {
             testCaseDAO.insertTestCase(testCase)
         }
@@ -61,12 +61,9 @@ class DatabaseViewModel(
     }
 
     //if app crashes and testCase of scenario is not finished, delete the data for it to fill it again
-    suspend fun getLastTestCaseOfScenario(id: Int): TestCase {
+    suspend fun getLastTestCaseOfScenario(id: Int): TestCase? {
         return withContext(Dispatchers.IO) {
-            val testCase = testCaseDAO.getLastTestCaseOfScenario(id)
-            if (testCase.EndTime == null)
-                deleteDataSet(testCase.TestCaseID)
-            testCase
+            testCaseDAO.getLastTestCaseOfScenario(id)
         }
     }
 
@@ -82,7 +79,7 @@ class DatabaseViewModel(
         }
     }
 
-    private fun deleteDataSet(testCaseId: Int) {
+    fun deleteDataSet(testCaseId: Int) {
         viewModelScope.launch {
             dataSetsDAO.deleteDataSetsForTestCase(testCaseId)
         }
@@ -94,10 +91,13 @@ class DatabaseViewModel(
         }
     }
 
-    fun updateUser(userId: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+    suspend fun updateUser(userId: Int) {
             usersDAO.updateUser(userId)
-        }
+    }
+
+    suspend fun updateTestCase(currentTime: String, testCaseId: Int) {
+            testCaseDAO.updateTestCase(currentTime, testCaseId)
+
     }
 }
 

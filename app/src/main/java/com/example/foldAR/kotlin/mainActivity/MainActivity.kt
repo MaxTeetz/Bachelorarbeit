@@ -91,16 +91,33 @@ class MainActivity : AppCompatActivity() {
         setUpDatabase()
     }
 
-    private fun setUpDatabase() {
-        viewModel.setUpDatabase(databaseViewModel)
-        viewModel.setLastUser()
-    }
-
     @SuppressLint("ClickableViewAccessibility")
     private fun setupBinding() {
         surfaceView = findViewById(R.id.surfaceview)
         tapHelper = TapHelper(this, viewModel).also {
             surfaceView.setOnTouchListener(it)
+        }
+    }
+
+    private fun setUpDatabase() {
+        viewModel.setUpDatabase(databaseViewModel)
+        viewModel.setLastUser()
+    }
+
+    private fun setUpDatabaseObservers() {
+        viewModel.dataBaseObjectsSet.observe(this) {
+            viewModel.setClickable(it)
+        }
+        viewModel.currentUser.observe(this) {
+            viewModel.checkCurrentUser()
+        }
+
+        viewModel.currentScenario.observe(this){
+            viewModel.checkCurrentScenario()
+        }
+
+        viewModel.currentTestCase.observe(this){
+            viewModel.checkCurrentTestCase()
         }
     }
 
@@ -113,8 +130,11 @@ class MainActivity : AppCompatActivity() {
 
     //start scenario button
     private fun setupButtons() {
-        binding.apply {
-            settingsButton.setOnClickListener {
+
+        binding.settingsButton.apply {
+            //wait until db is set
+            isClickable = false
+            setOnClickListener {
                 DialogObjectOptions.newInstance().show(supportFragmentManager, "")
             }
         }
@@ -147,7 +167,6 @@ class MainActivity : AppCompatActivity() {
             .setCancelable(false)
             .setPositiveButton("Nächste Runde") { dialogInterface, _ -> //Todo disable reached until both are placed
                 viewModel.setTargetIndex()
-                viewModel.saveTestCase() //Todo wait until its saved and then start
                 if (renderer.wrappedAnchors.isNotEmpty()) {
                     viewModel.placeTargetOnNewPosition()
                     viewModel.placeObjectInFocus()
@@ -175,21 +194,13 @@ class MainActivity : AppCompatActivity() {
             if (it == maxTargets) {
                 renderer.deleteAnchor()
                 viewModel.resetTargetIndex()
-                if (viewModel.currentScenario!!.ScenarioName == 2) {
-                    viewModel.userDone()
-                    viewModel.resetData()
-                    Toast.makeText(
-                        this,
-                        "Du bist fertig",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else {
-                    Toast.makeText(
-                        this,
-                        "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+
+                Toast.makeText(
+                    this,
+                    "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
+                    Toast.LENGTH_LONG
+                ).show()
+
                 viewModel.setClickable(true)
                 tapHelper.onResume()
             }
@@ -232,6 +243,7 @@ class MainActivity : AppCompatActivity() {
         depthSettings.onCreate(this)
         instantPlacementSettings.onCreate(this)
     }
+
 
     // Configure the session, using Lighting Estimation, and Depth mode.
     private fun configureSession(session: Session) {

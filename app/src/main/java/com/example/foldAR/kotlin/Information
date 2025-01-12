@@ -83,12 +83,15 @@ Logic
 Alle Daten einmal beim App Start auslesen und danach in temporären Variablen speichern -> verringert Leseoperationen
 -> nach Test temporäre Variablen updaten, in DB speichern und danach Logik entscheiden
 
-App Starten -> Nutzer Existier nicht -> Scenario anlegen -> Testcase anlegen    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-           └──Nutzer existiert -> Fertig -> Neuer Benutzer -> Gleich wie Benutzer existiert nicht                                                                                                                                                           |
-                              └── Nicht fertig -> Gucken in welchem Scenario er ist -> Gucken in welchem Testcase er ist -> TestCase fertig -> Welcher Testcase ist es -> Letzter im Scenario -> Nicht letztes Scenario -> Neues Scenario   ────────────────
-                                                                                                                        |                                               |                    └── Letztes Scenario -> Benutzer fertig und neuer Benutzer     |
-                                                                                                                        |                                               └── Nicht letzter im Scenario -> Nächsten TestCase starten im Scenario ─────────────|
-                                                                                                                        └── TestCase nicht fertig -> DataSet für Testcase löschen und diesen neu starten    ────────────────────────────────────────────────└── UI updaten und TestCase mit Daten füllen
-
+                                        1!
+App Starten -> Nutzer Existier nicht -> Nutzer anlegen -> Scenario anlegen -> Testcase anlegen    ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+           └──Nutzer existiert -> Fertig -> Neuer Benutzer -> Gleich wie Benutzer existiert nicht                                                                                                                                                                                |
+                              └── Nicht fertig -> Gucken in welchem Scenario er ist -> Scenario vorhanden -> TestCase vorhanden -> TestCase fertig -> Welcher Testcase ist es -> Letzter im Scenario -> Nicht letztes Scenario -> Neues Scenario ────────────────────────────────|
+                                                                                   |                      |                     |                                               |                   └── Letztes Scenario -> Benutzer fertig und neuer Benutzer -> siehe 1        |
+                                                                                   |                      |                     |                                               └── Nicht letzter im Scenario -> Nächsten TestCase starten im Scenario ──────────────────────────|
+                                                                                   |                      |                     └── TestCase nicht fertig -> DataSet für Testcase löschen und diesen neu starten  ───────────────────────────────────────────────────────────────|
+                                                                                   |                      └── TestCase nicht vorhanden -> neuen für Scenario anlegen ────────────────────────────────────────────────────────────────────────────────────────────────────────────└── UI updaten und TestCase mit Daten füllen
+                                                                                   |
+                                                                                   └── Scenario nicht vorhanden -> Nutzer löschen und neu anlegen lassen -> siehe 1!
 
 Nutzer gesetzt -> Scenario gesetzt -> TestCase gesetzt -> Test starten und Daten speichern

@@ -84,7 +84,7 @@ class DialogObjectOptions : DialogFragment() {
         this.name = binding.name.text.toString()
         val noAnchors = viewModelMainActivity.renderer.wrappedAnchors.isEmpty()
         val message = getErrorMessage(name, noAnchors)
-        val userId = viewModelMainActivity.user?.UserID
+        val userId = viewModelMainActivity.currentUser.value?.UserID
 
         if (userId == null) {
             if (message != null)
@@ -102,20 +102,6 @@ class DialogObjectOptions : DialogFragment() {
     //checks for the current users scenario and test case. if last user was done with the tasks,
     //create new one
     private fun startChecking() {
-
-        if (viewModelMainActivity.checkCurrentUserStatus())
-            insertUserIntoDatabase()
-        else {
-            if(viewModelMainActivity.targetIndex.value == 20){
-                viewModelMainActivity.resetTargetIndex()
-                if(viewModelMainActivity.currentScenario!!.ScenarioName == 2){
-                    viewModelMainActivity.userDone()
-                    viewModelMainActivity.resetData()
-                    return
-                }
-                viewModelMainActivity.saveScenario()
-            }
-        }
     }
 
 
@@ -132,36 +118,16 @@ class DialogObjectOptions : DialogFragment() {
     private fun insertUserIntoDatabase() {
 
         val user = User(Username = name)
-        viewModelMainActivity.resetData()
-
         lifecycleScope.launch {
-            saveUser(user)
-            saveScenario()
-            saveTestCase()
-            startUI(user.UserID)
+//            saveUser(user)
+//            saveScenario()
+//            saveTestCase()
+            startUI()
         }
     }
 
     //Todo work with livedata for this
-    private suspend fun saveUser(user: User) {
-        viewModelMainActivity.saveUser(user)
-
-    }
-
-    //Todo work with livedata for this
-    private suspend fun saveScenario() {
-        viewModelMainActivity.saveScenario()
-
-    }
-
-    //Todo work with livedata for this
-    private suspend fun saveTestCase() {
-        viewModelMainActivity.saveTestCase()
-
-    }
-
-    //Todo work with livedata for this
-    private fun startUI(userId: Int) {
+    private fun startUI() {
 
         viewModelMainActivity.createTarget()
         viewModelMainActivity.setClickable(false)
