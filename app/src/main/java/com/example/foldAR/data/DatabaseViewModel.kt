@@ -28,16 +28,13 @@ class DatabaseViewModel(
         }
     }
 
-    fun insertScenario(scenario: Scenario) {
-        viewModelScope.launch {
-            scenariosDAO.insertScenario(scenario)
-        }
+    suspend fun insertScenario(scenario: Scenario) {
+        scenariosDAO.insertScenario(scenario)
+
     }
 
     suspend fun insertTestCase(testCase: TestCase) {
-        viewModelScope.launch {
-            testCaseDAO.insertTestCase(testCase)
-        }
+        testCaseDAO.insertTestCase(testCase)
     }
 
     fun insertDataSet(dataSet: DataSet) {
@@ -92,12 +89,11 @@ class DatabaseViewModel(
     }
 
     suspend fun updateUser(userId: Int) {
-            usersDAO.updateUser(userId)
+        usersDAO.updateUser(userId)
     }
 
     suspend fun updateTestCase(currentTime: String, testCaseId: Int) {
-            testCaseDAO.updateTestCase(currentTime, testCaseId)
-
+        testCaseDAO.updateTestCase(currentTime, testCaseId)
     }
 }
 

@@ -66,10 +66,6 @@ class MainActivityViewModel : ViewModel() {
 
     private var viewScale = 0f;
 
-    private fun setTargetIndexToCurrentTestIndex(id: Int) {
-        _targetIndex.value = id
-    }
-
     fun setTargetIndex() {
         this._targetIndex.value?.let { _targetIndex.value = it + 1 }
     }
@@ -202,11 +198,11 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun checkCurrentUser() {
-        if (currentUser.value == null)
-            resetData()
-        else {
+        if (currentUser.value == null) {
+            _dataBaseObjectsSet.value = true
+        } else {
             if (currentUser.value!!.Done) {
-                resetData()
+                _currentUser.value = null
             } else {
                 viewModelScope.launch(Dispatchers.IO) {
                     _currentScenario.value =
@@ -218,9 +214,9 @@ class MainActivityViewModel : ViewModel() {
 
     fun checkCurrentScenario() {
         //erstmal Nutzer nicht aus DB löschen. Egal, wenn Nutzer leer
-        if (currentScenario.value == null)
-            resetData()
-        else
+        if (currentScenario.value == null) {
+            createNewScenario()
+        } else
             viewModelScope.launch(Dispatchers.IO) {
                 _currentTestCase.value =
                     database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID)
@@ -241,18 +237,22 @@ class MainActivityViewModel : ViewModel() {
                         setUserDone()
                     } else {
                         createNewScenario()
+                        _dataBaseObjectsSet.value = true
                     }
                 } else {
                     createTestCase()
+                    _dataBaseObjectsSet.value = false
                 }
             }
         }
     }
 
     private fun createNewScenario() {
+        val scenarioName: Int = currentScenario.value?.ScenarioName?.plus(1) ?: 0
+
         val scenario = Scenario(
             UserID = currentUser.value!!.UserID,
-            ScenarioName = currentScenario.value!!.ScenarioName + 1
+            ScenarioName = scenarioName
         )
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -287,19 +287,19 @@ class MainActivityViewModel : ViewModel() {
 
     fun updateTestCase() {
         val currentTime = System.currentTimeMillis().toString()
+        val curTestCase = currentTestCase.value!!
+
+        val testCase = TestCase(
+            TestCaseID = curTestCase.TestCaseID,
+            ScenarioID = curTestCase.ScenarioID,
+            TestCaseName = curTestCase.TestCaseName,
+            StartTime = curTestCase.StartTime,
+            EndTime = System.currentTimeMillis().toString()
+        )
 
         viewModelScope.launch(Dispatchers.IO) {
             database.updateTestCase(currentTime, currentTestCase.value!!.TestCaseID)
-            currentTestCase.value = database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID)
+            currentTestCase.value = testCase
         }
     }
-
-    private fun resetData() {
-        _currentUser.value = null
-        _currentScenario.value = null
-        _currentTestCase.value = null
-        _dataBaseObjectsSet.value = true
-    }
-
-
 }
