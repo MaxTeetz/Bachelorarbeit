@@ -76,3 +76,19 @@ User (id, name)
    └── Scenario (id, userId, name)
          └── Test Case (id, scenarioId, name)
                └── Test Case Data (id, testCaseId, cameraPosition, startTime, endTime, clicks)
+
+
+Logic
+
+Alle Daten einmal beim App Start auslesen und danach in temporären Variablen speichern -> verringert Leseoperationen
+-> nach Test temporäre Variablen updaten, in DB speichern und danach Logik entscheiden
+
+App Starten -> Nutzer Existier nicht -> Scenario anlegen -> Testcase anlegen    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+           └──Nutzer existiert -> Fertig -> Neuer Benutzer -> Gleich wie Benutzer existiert nicht                                                                                                                                                           |
+                              └── Nicht fertig -> Gucken in welchem Scenario er ist -> Gucken in welchem Testcase er ist -> TestCase fertig -> Welcher Testcase ist es -> Letzter im Scenario -> Nicht letztes Scenario -> Neues Scenario   ────────────────
+                                                                                                                        |                                               |                    └── Letztes Scenario -> Benutzer fertig und neuer Benutzer     |
+                                                                                                                        |                                               └── Nicht letzter im Scenario -> Nächsten TestCase starten im Scenario ─────────────|
+                                                                                                                        └── TestCase nicht fertig -> DataSet für Testcase löschen und diesen neu starten    ────────────────────────────────────────────────└── UI updaten und TestCase mit Daten füllen
+
+
+Nutzer gesetzt -> Scenario gesetzt -> TestCase gesetzt -> Test starten und Daten speichern

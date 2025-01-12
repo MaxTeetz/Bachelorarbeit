@@ -1,6 +1,5 @@
 package com.example.foldAR.kotlin.mainActivity
 
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.MutableLiveData
@@ -203,10 +202,7 @@ class MainActivityViewModel : ViewModel() {
 
     fun setLastUser() {
         viewModelScope.launch(Dispatchers.IO) {
-
             _user = database.getLastUser()
-
-            Log.d("TestTest", _user.toString())
         }
     }
 
