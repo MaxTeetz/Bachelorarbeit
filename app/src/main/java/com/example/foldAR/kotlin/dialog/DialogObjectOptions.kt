@@ -95,18 +95,26 @@ class DialogObjectOptions : DialogFragment() {
             if (noAnchors)
                 Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
             else
-                startChecking(userId)
+                startChecking()
         }
     }
 
     //checks for the current users scenario and test case. if last user was done with the tasks,
     //create new one
-    private fun startChecking(userId: Int) {
+    private fun startChecking() {
 
         if (viewModelMainActivity.checkCurrentUserStatus())
             insertUserIntoDatabase()
         else {
-
+            if(viewModelMainActivity.targetIndex.value == 20){
+                viewModelMainActivity.resetTargetIndex()
+                if(viewModelMainActivity.currentScenario!!.ScenarioName == 2){
+                    viewModelMainActivity.userDone()
+                    viewModelMainActivity.resetData()
+                    return
+                }
+                viewModelMainActivity.saveScenario()
+            }
         }
     }
 
@@ -124,6 +132,7 @@ class DialogObjectOptions : DialogFragment() {
     private fun insertUserIntoDatabase() {
 
         val user = User(Username = name)
+        viewModelMainActivity.resetData()
 
         lifecycleScope.launch {
             saveUser(user)

@@ -279,4 +279,14 @@ class MainActivityViewModel : ViewModel() {
         //only return false after everythings done //Todo
         return false
     }
+
+    fun resetData() {
+        _currentScenario = null
+        _currentTestCase = null
+        _user = null
+    }
+
+    fun userDone() {
+        database.updateUser(user!!.UserID)
+    }
 }

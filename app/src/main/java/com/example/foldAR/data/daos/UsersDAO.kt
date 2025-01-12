@@ -14,5 +14,8 @@ interface UsersDAO {
     suspend fun getUserById(id: Int): User?
 
     @Query("SELECT * FROM User ORDER BY UserID DESC LIMIT 1")
-    suspend fun getLastUser() : User?
+    suspend fun getLastUser(): User?
+
+    @Query("UPDATE USER SET Done = true WHERE UserID = :userId")
+    suspend fun updateUser(userId: Int)
 }

@@ -147,6 +147,7 @@ class MainActivity : AppCompatActivity() {
             .setCancelable(false)
             .setPositiveButton("Nächste Runde") { dialogInterface, _ -> //Todo disable reached until both are placed
                 viewModel.setTargetIndex()
+                viewModel.saveTestCase() //Todo wait until its saved and then start
                 if (renderer.wrappedAnchors.isNotEmpty()) {
                     viewModel.placeTargetOnNewPosition()
                     viewModel.placeObjectInFocus()
@@ -174,11 +175,21 @@ class MainActivity : AppCompatActivity() {
             if (it == maxTargets) {
                 renderer.deleteAnchor()
                 viewModel.resetTargetIndex()
-                Toast.makeText(
-                    this,
-                    "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
-                    Toast.LENGTH_LONG
-                ).show()
+                if (viewModel.currentScenario!!.ScenarioName == 2) {
+                    viewModel.userDone()
+                    viewModel.resetData()
+                    Toast.makeText(
+                        this,
+                        "Du bist fertig",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    Toast.makeText(
+                        this,
+                        "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
                 viewModel.setClickable(true)
                 tapHelper.onResume()
             }

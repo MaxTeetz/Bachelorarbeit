@@ -93,6 +93,12 @@ class DatabaseViewModel(
             scenariosDAO.getLastScenarioOfUser(userId)
         }
     }
+
+    fun updateUser(userId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            usersDAO.updateUser(userId)
+        }
+    }
 }
 
 class DatabaseViewModelFactory(
