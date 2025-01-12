@@ -12,9 +12,9 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.foldAR.data.AppDatabase
 import com.example.foldAR.data.DatabaseApplication
+import com.example.foldAR.data.entities.User
 import com.example.foldAR.kotlin.helloar.databinding.DialogObjectOptionsBinding
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel
-import com.example.foldAR.kotlin.renderer.WrappedAnchor
 import kotlinx.coroutines.launch
 
 class DialogObjectOptions : DialogFragment() {
@@ -80,18 +80,40 @@ class DialogObjectOptions : DialogFragment() {
     }
 
     private fun checkCorrect() {
-        this.name = binding.name.text.toString()
-        val message = getErrorMessage(name, viewModelMainActivity.renderer.wrappedAnchors)
 
-        if (message != null)
-            Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
-        else
-            startTest(name)
+        this.name = binding.name.text.toString()
+        val noAnchors = viewModelMainActivity.renderer.wrappedAnchors.isEmpty()
+        val message = getErrorMessage(name, noAnchors)
+        val userId = viewModelMainActivity.user?.UserID
+
+        if (userId == null) {
+            if (message != null)
+                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+            else
+                insertUserIntoDatabase()
+        } else {
+            if (noAnchors)
+                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+            else
+                startChecking(userId)
+        }
     }
 
-    private fun getErrorMessage(name: String, wrappedAnchors: MutableList<WrappedAnchor>): String? {
+    //checks for the current users scenario and test case. if last user was done with the tasks,
+    //create new one
+    private fun startChecking(userId: Int) {
+
+        if (viewModelMainActivity.checkCurrentUserStatus())
+            insertUserIntoDatabase()
+        else {
+
+        }
+    }
+
+
+    private fun getErrorMessage(name: String, noAnchors: Boolean): String? {
         return when {
-            wrappedAnchors.isEmpty() -> "Bitte erst Objekt platzieren"
+            noAnchors -> "Bitte erst Objekt platzieren"
 
             name.isEmpty() -> "Bitte erst Namen eintragen"
 
@@ -99,12 +121,38 @@ class DialogObjectOptions : DialogFragment() {
         }
     }
 
-    private fun startTest(name: String) {
+    private fun insertUserIntoDatabase() {
 
+        val user = User(Username = name)
 
         lifecycleScope.launch {
-            viewModelMainActivity.saveName()
+            saveUser(user)
+            saveScenario()
+            saveTestCase()
+            startUI(user.UserID)
         }
+    }
+
+    //Todo work with livedata for this
+    private suspend fun saveUser(user: User) {
+        viewModelMainActivity.saveUser(user)
+
+    }
+
+    //Todo work with livedata for this
+    private suspend fun saveScenario() {
+        viewModelMainActivity.saveScenario()
+
+    }
+
+    //Todo work with livedata for this
+    private suspend fun saveTestCase() {
+        viewModelMainActivity.saveTestCase()
+
+    }
+
+    //Todo work with livedata for this
+    private fun startUI(userId: Int) {
 
         viewModelMainActivity.createTarget()
         viewModelMainActivity.setClickable(false)
@@ -112,6 +160,7 @@ class DialogObjectOptions : DialogFragment() {
         viewModelMainActivity.placeObjectInFocus()
 
         this.dismiss()
+
     }
 
     override fun onResume() {

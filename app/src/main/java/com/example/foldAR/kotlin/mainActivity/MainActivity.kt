@@ -9,10 +9,12 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import com.example.foldAR.data.AppDatabase
 import com.example.foldAR.data.DatabaseApplication
+import com.example.foldAR.data.DatabaseViewModel
+import com.example.foldAR.data.DatabaseViewModelFactory
 import com.example.foldAR.java.helpers.CameraPermissionHelper
 import com.example.foldAR.java.helpers.DepthSettings
 import com.example.foldAR.java.helpers.InstantPlacementSettings
@@ -40,10 +42,7 @@ class MainActivity : AppCompatActivity() {
         private const val TAG = "MainActivityTest"
     }
 
-    private val database: AppDatabase by lazy {
-        (application as DatabaseApplication).database
-    }
-
+    private lateinit var databaseViewModel: DatabaseViewModel
 
     private lateinit var navController: NavController
     private lateinit var _binding: ActivityMainBinding
@@ -67,6 +66,16 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
+
+        val usersDAO = (application as DatabaseApplication).database.usersDao()
+        val scenariosDAO = (application as DatabaseApplication).database.scenariosDao()
+        val testCaseDAO = (application as DatabaseApplication).database.testCasesDao()
+        val dataSetsDAO = (application as DatabaseApplication).database.dataSetsDao()
+
+        val factory = DatabaseViewModelFactory(usersDAO, scenariosDAO, testCaseDAO, dataSetsDAO)
+
+        val databaseViewModel = ViewModelProvider(this, factory).get(DatabaseViewModel::class.java)
+
         setContentView(binding.root)
         setupBinding()
         setupNavigation()
@@ -83,7 +92,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setUpDatabase() {
-        viewModel.setUpDatabase(database)
+        viewModel.setUpDatabase(databaseViewModel)
+        viewModel.setLastUser()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -101,7 +111,7 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.hide()
     }
 
-    //start scenario/ next round button
+    //start scenario button
     private fun setupButtons() {
         binding.apply {
             settingsButton.setOnClickListener {
@@ -144,6 +154,35 @@ class MainActivity : AppCompatActivity() {
                 dialogInterface.dismiss()
             }.setOnDismissListener { isAlertDialogOpen = false }
             .show()
+    }
+
+    //next target within scenario
+    private fun setUpNextTargetObserver() {
+        renderer.reached.observe(this) {
+            if (it == true) {
+
+                renderer.resetReached()
+                showAlert()
+
+            }
+        }
+    }
+
+    //next scenario i.e. folded or unfolded
+    private fun setUpNextRoundObserver() {
+        viewModel.targetIndex.observe(this) {
+            if (it == maxTargets) {
+                renderer.deleteAnchor()
+                viewModel.resetTargetIndex()
+                Toast.makeText(
+                    this,
+                    "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
+                    Toast.LENGTH_LONG
+                ).show()
+                viewModel.setClickable(true)
+                tapHelper.onResume()
+            }
+        }
     }
 
     /**
@@ -266,34 +305,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    //next scenario i.e. folded or unfolded
-    private fun setUpNextRoundObserver() {
-        viewModel.targetIndex.observe(this) {
-            if (it == maxTargets) {
-                renderer.deleteAnchor()
-                viewModel.resetTargetIndex()
-                Toast.makeText(
-                    this,
-                    "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
-                    Toast.LENGTH_LONG
-                ).show()
-                viewModel.setClickable(true)
-                tapHelper.onResume()
-            }
-        }
-    }
-
-    //next target within scenario
-    private fun setUpNextTargetObserver() {
-        renderer.reached.observe(this) {
-            if (it == true) {
-
-                renderer.resetReached()
-                showAlert()
-
-            }
-        }
-    }
 
     override fun onResume() {
         super.onResume()

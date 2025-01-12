@@ -1,10 +1,12 @@
 package com.example.foldAR.kotlin.mainActivity
 
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.foldAR.data.AppDatabase
+import androidx.lifecycle.viewModelScope
+import com.example.foldAR.data.DatabaseViewModel
 import com.example.foldAR.data.entities.DataSet
 import com.example.foldAR.data.entities.Scenario
 import com.example.foldAR.data.entities.TestCase
@@ -13,6 +15,8 @@ import com.example.foldAR.kotlin.constants.Constants
 import com.example.foldAR.kotlin.constants.ObjectCoords
 import com.example.foldAR.kotlin.renderer.HelloArRenderer
 import com.google.ar.core.Pose
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -21,7 +25,17 @@ import kotlin.math.sin
  *  the fragments to the renderer**/
 class MainActivityViewModel : ViewModel() {
 
-    private lateinit var database: AppDatabase
+    //Database
+    private lateinit var database: DatabaseViewModel
+    private var _user: User? = null
+    val user get() = _user
+
+    private var _currentScenario: Scenario? = null
+    val currentScenario get() = _currentScenario
+
+    //only change this once per user per run
+    private var _currentTestCase: TestCase? = null
+    val currentTestCase get() = _currentTestCase
 
     private var pose: Pose? = null
     private var newHeight = 0f
@@ -50,6 +64,10 @@ class MainActivityViewModel : ViewModel() {
     private var initialY = 0f
 
     private var viewScale = 0f;
+
+    private fun setTargetIndexToCurrentTestIndex(id: Int) {
+        _targetIndex.value = id
+    }
 
     fun setTargetIndex() {
         this._targetIndex.value?.let { _targetIndex.value = it + 1 }
@@ -172,23 +190,55 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-    fun setUpDatabase(database: AppDatabase) {
+    fun setUpDatabase(database: DatabaseViewModel) {
         this.database = database
     }
 
-    fun saveName(user: User) {
+    fun saveUser(user: User) {
+        _user = user
+        viewModelScope.launch(Dispatchers.IO) {
+            database.insertUser(user)
+        }
     }
 
-    fun saveScenario(scenario: Scenario) {
+    fun setLastUser() {
+        viewModelScope.launch(Dispatchers.IO) {
 
+            _user = database.getLastUser()
+
+            Log.d("TestTest", _user.toString())
+        }
     }
 
-    fun getScenarioByUserId(userId: Int): Scenario? {
-        TODO()
+
+    fun saveScenario() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val scenarioName: Int
+            _currentScenario = database.getLastScenarioByUserId(user!!.UserID)
+            if (currentScenario == null)
+                scenarioName = 0
+            else
+                scenarioName = currentScenario!!.ScenarioName + 1
+
+            database.insertScenario(Scenario(UserID = user!!.UserID, ScenarioName = scenarioName))
+        }
     }
 
-    fun saveTestCase(testCase: TestCase) {
+    fun saveTestCase() {
+        val testCase = TestCase(
+            ScenarioID = currentScenario!!.ScenarioID,
+            TestCaseName = targetIndex.value!!,
+            StartTime = System.currentTimeMillis().toString(),
+            EndTime = null
+        )
 
+        _currentTestCase = testCase
+
+        viewModelScope.launch(Dispatchers.IO) {
+            database.insertTestCase(
+                testCase
+            )
+        }
     }
 
     fun saveDataSet(dataSet: DataSet) {
@@ -199,5 +249,34 @@ class MainActivityViewModel : ViewModel() {
 
     }
 
+    //if user is not done check as follows:
+    //which scenario is he in
+    //which testcase in this scenario
+    //is the testcase completed
+    //if yes start with the next test case/ scenario
+    //delete the testcase´s dataset and restart the testcase
+    fun checkCurrentUserStatus(): Boolean {
+        if (user!!.Done)
+            return true
 
+        viewModelScope.launch(Dispatchers.IO) {
+
+            val currentScenario = database.getLastScenarioByUserId(user!!.UserID)
+
+//            if(currentScenario == null) //TODO!!! only if it crashes after creation of user and before scenario was created
+//                return@launch true
+
+            val mostRecentTestCase =
+                database.getLastTestCaseOfScenario(currentScenario!!.ScenarioID)
+            if (mostRecentTestCase.EndTime == null) {
+                setTargetIndexToCurrentTestIndex(mostRecentTestCase.TestCaseName)
+                _currentTestCase = mostRecentTestCase
+            }
+            if (mostRecentTestCase.EndTime != null)
+                setTargetIndexToCurrentTestIndex(mostRecentTestCase.TestCaseName + 1)
+        }
+
+        //only return false after everythings done //Todo
+        return false
+    }
 }

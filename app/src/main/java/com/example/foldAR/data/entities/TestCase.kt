@@ -15,7 +15,7 @@ import androidx.room.PrimaryKey
 data class TestCase(
     @PrimaryKey(autoGenerate = true) val TestCaseID: Int = 0,
     val ScenarioID: Int,
-    val TestCaseName: String,
+    val TestCaseName: Int,
     val StartTime: String,
     val EndTime: String?
 )

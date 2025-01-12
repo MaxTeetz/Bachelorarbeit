@@ -52,11 +52,6 @@ class DatabaseViewModel(
         }
     }
 
-    suspend fun userGetScenario(id: Int): List<Scenario>? {
-        return withContext(Dispatchers.IO) {
-            scenariosDAO.getScenariosByUserId(id)
-        }
-    }
 
     //if testCase done just start dialog after setting testCase and scenario number else
     suspend fun scenarioGetTestCases(id: Int): List<TestCase> {
@@ -65,8 +60,18 @@ class DatabaseViewModel(
         }
     }
 
+    //if app crashes and testCase of scenario is not finished, delete the data for it to fill it again
+    suspend fun getLastTestCaseOfScenario(id: Int): TestCase {
+        return withContext(Dispatchers.IO) {
+            val testCase = testCaseDAO.getLastTestCaseOfScenario(id)
+            if (testCase.EndTime == null)
+                deleteDataSet(testCase.TestCaseID)
+            testCase
+        }
+    }
+
     //if app crashes and testCase is not finished, delete the data for it to fill it again
-    suspend fun getLastTestCase(id: Int): Boolean {
+    suspend fun getLastTestCase(): Boolean {
         return withContext(Dispatchers.IO) {
             val testCase = testCaseDAO.getLastTestCase()
             if (testCase.EndTime == null) {
@@ -80,6 +85,12 @@ class DatabaseViewModel(
     private fun deleteDataSet(testCaseId: Int) {
         viewModelScope.launch {
             dataSetsDAO.deleteDataSetsForTestCase(testCaseId)
+        }
+    }
+
+    suspend fun getLastScenarioByUserId(userId: Int): Scenario? {
+        return withContext(Dispatchers.IO) {
+            scenariosDAO.getLastScenarioOfUser(userId)
         }
     }
 }

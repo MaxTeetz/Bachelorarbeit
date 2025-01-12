@@ -15,5 +15,5 @@ import androidx.room.PrimaryKey
 data class Scenario(
     @PrimaryKey(autoGenerate = true) val ScenarioID: Int = 0,
     val UserID: Int,
-    val ScenarioName: String
+    val ScenarioName: Int
 )
