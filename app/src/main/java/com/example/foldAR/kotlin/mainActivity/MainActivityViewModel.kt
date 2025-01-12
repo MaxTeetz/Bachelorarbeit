@@ -38,12 +38,17 @@ class MainActivityViewModel : ViewModel() {
     private var _dataBaseObjectsSet: MutableLiveData<Boolean> = MutableLiveData(false)
     val dataBaseObjectsSet get() = _dataBaseObjectsSet
 
+    //set false if new ui is loaded
+    fun setDatabaseObjectsSet(case: Boolean) {
+        _dataBaseObjectsSet.value = case
+    }
+
     private var pose: Pose? = null
     private var newHeight = 0f
     private lateinit var _renderer: HelloArRenderer
     val renderer get() = _renderer
 
-    //to keep it simple just use some workarounds by not manipulating it at all.
+    //to keep it simple just use some workarounds by not manipulating it at all
     private var _currentPosition: MutableLiveData<Int> = MutableLiveData(0)
     val currentPosition get() = _currentPosition
 
@@ -64,11 +69,7 @@ class MainActivityViewModel : ViewModel() {
 
     private var initialY = 0f
 
-    private var viewScale = 0f;
-
-    fun setTargetIndex() {
-        this._targetIndex.value?.let { _targetIndex.value = it + 1 }
-    }
+    private var viewScale = 0f
 
     fun resetTargetIndex() {
         this._targetIndex.value = 0
@@ -230,7 +231,11 @@ class MainActivityViewModel : ViewModel() {
         } else {
             if (currentTestCase.value!!.EndTime == null) {
                 database.deleteDataSet(currentTestCase.value!!.TestCaseID)
-                targetIndex.value = currentTestCase.value!!.TestCaseName
+                _targetIndex.value = currentTestCase.value!!.TestCaseName
+
+                //only true in case that its after app start and not in between rounds
+                if (renderer.wrappedAnchors.size != 2)
+                    _dataBaseObjectsSet.value = true
             } else {
                 if (currentTestCase.value!!.TestCaseName == Constants.maxTargets - 1) {
                     if (currentScenario.value!!.ScenarioName == 2) {
@@ -241,7 +246,6 @@ class MainActivityViewModel : ViewModel() {
                     }
                 } else {
                     createTestCase()
-                    _dataBaseObjectsSet.value = false
                 }
             }
         }
@@ -257,7 +261,7 @@ class MainActivityViewModel : ViewModel() {
 
         viewModelScope.launch(Dispatchers.IO) {
             database.insertScenario(scenario)
-            currentScenario.value = scenario
+            currentScenario.value = database.getLastScenarioByUserId(currentUser.value!!.UserID)
         }
     }
 
@@ -272,7 +276,7 @@ class MainActivityViewModel : ViewModel() {
 
         val testCase = TestCase(
             ScenarioID = currentScenario.value!!.ScenarioID,
-            TestCaseName = targetIndex.value!!,
+            TestCaseName = targetIndex.value!! + 1,
             StartTime = System.currentTimeMillis().toString(),
             EndTime = null
         )
@@ -280,7 +284,8 @@ class MainActivityViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             database.insertTestCase(testCase)
 
-            currentTestCase.value = testCase
+            currentTestCase.value =
+                database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID)
         }
     }
 
@@ -300,6 +305,13 @@ class MainActivityViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             database.updateTestCase(currentTime, currentTestCase.value!!.TestCaseID)
             currentTestCase.value = testCase
+        }
+    }
+
+    fun insertUser(name: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.insertUser(User(Username = name))
+            _currentUser
         }
     }
 }

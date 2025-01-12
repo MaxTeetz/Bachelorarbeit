@@ -33,7 +33,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
-        android:id="@+id/next_object"
+        android:id="@+id/start_testing"
         android:layout_width="123dp"
         android:layout_height="wrap_content"
         android:backgroundTint="@color/green"

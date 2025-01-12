@@ -22,7 +22,7 @@ class DatabaseViewModel(
     private val dataSetsDAO: DataSetsDAO
 ) : ViewModel() {
 
-    fun insertUser(user: User) {
+    suspend fun insertUser(user: User) {
         viewModelScope.launch {
             usersDAO.insertUser(user)
         }
@@ -61,18 +61,6 @@ class DatabaseViewModel(
     suspend fun getLastTestCaseOfScenario(id: Int): TestCase? {
         return withContext(Dispatchers.IO) {
             testCaseDAO.getLastTestCaseOfScenario(id)
-        }
-    }
-
-    //if app crashes and testCase is not finished, delete the data for it to fill it again
-    suspend fun getLastTestCase(): Boolean {
-        return withContext(Dispatchers.IO) {
-            val testCase = testCaseDAO.getLastTestCase()
-            if (testCase.EndTime == null) {
-                deleteDataSet(testCase.TestCaseID)
-                true
-            } else
-                false
         }
     }
 

@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
 
         val factory = DatabaseViewModelFactory(usersDAO, scenariosDAO, testCaseDAO, dataSetsDAO)
 
-        val databaseViewModel = ViewModelProvider(this, factory).get(DatabaseViewModel::class.java)
+        databaseViewModel = ViewModelProvider(this, factory).get(DatabaseViewModel::class.java)
 
         setContentView(binding.root)
         setupBinding()
@@ -108,15 +108,16 @@ class MainActivity : AppCompatActivity() {
         viewModel.dataBaseObjectsSet.observe(this) {
             viewModel.setClickable(it)
         }
+
         viewModel.currentUser.observe(this) {
             viewModel.checkCurrentUser()
         }
 
-        viewModel.currentScenario.observe(this){
+        viewModel.currentScenario.observe(this) {
             viewModel.checkCurrentScenario()
         }
 
-        viewModel.currentTestCase.observe(this){
+        viewModel.currentTestCase.observe(this) {
             viewModel.checkCurrentTestCase()
         }
     }
@@ -156,6 +157,7 @@ class MainActivity : AppCompatActivity() {
 
     //shows alert if target is reached
     private fun showAlert() {
+
         if (isAlertDialogOpen) {
             return
         }
@@ -166,7 +168,6 @@ class MainActivity : AppCompatActivity() {
             .setMessage("${viewModel.targetIndex.value!! + 1}/20")
             .setCancelable(false)
             .setPositiveButton("Nächste Runde") { dialogInterface, _ -> //Todo disable reached until both are placed
-                viewModel.setTargetIndex()
                 if (renderer.wrappedAnchors.isNotEmpty()) {
                     viewModel.placeTargetOnNewPosition()
                     viewModel.placeObjectInFocus()
@@ -180,9 +181,8 @@ class MainActivity : AppCompatActivity() {
     private fun setUpNextTargetObserver() {
         renderer.reached.observe(this) {
             if (it == true) {
-
+                viewModel.updateTestCase()
                 renderer.resetReached()
-                showAlert()
 
             }
         }
@@ -191,10 +191,9 @@ class MainActivity : AppCompatActivity() {
     //next scenario i.e. folded or unfolded
     private fun setUpNextRoundObserver() {
         viewModel.targetIndex.observe(this) {
-            if (it == maxTargets) {
+            if (it == maxTargets - 1) {
                 renderer.deleteAnchor()
                 viewModel.resetTargetIndex()
-
                 Toast.makeText(
                     this,
                     "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
@@ -203,7 +202,8 @@ class MainActivity : AppCompatActivity() {
 
                 viewModel.setClickable(true)
                 tapHelper.onResume()
-            }
+            } else
+                showAlert()
         }
     }
 

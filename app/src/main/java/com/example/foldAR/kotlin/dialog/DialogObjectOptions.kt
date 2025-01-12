@@ -10,11 +10,9 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import com.example.foldAR.data.AppDatabase
-import com.example.foldAR.data.DatabaseApplication
-import com.example.foldAR.data.entities.User
 import com.example.foldAR.kotlin.helloar.databinding.DialogObjectOptionsBinding
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class DialogObjectOptions : DialogFragment() {
@@ -25,9 +23,6 @@ class DialogObjectOptions : DialogFragment() {
         }
     }
 
-    private val database: AppDatabase by lazy {
-        (requireActivity().application as DatabaseApplication).database
-    }
 
     private var _binding: DialogObjectOptionsBinding? = null
     private val binding get() = _binding!!
@@ -35,8 +30,6 @@ class DialogObjectOptions : DialogFragment() {
     private val viewModelMainActivity: MainActivityViewModel by activityViewModels()
 
     private var displayWidth: Int? = null
-
-    private lateinit var name: String
 
     override fun onStart() {
         super.onStart()
@@ -74,68 +67,57 @@ class DialogObjectOptions : DialogFragment() {
     }
 
     private fun setUpListener() {
-        binding.nextObject.setOnClickListener {
-            checkCorrect()
+        binding.startTesting.setOnClickListener {
+            checkUser()
         }
     }
 
-    private fun checkCorrect() {
-
-        this.name = binding.name.text.toString()
-        val noAnchors = viewModelMainActivity.renderer.wrappedAnchors.isEmpty()
-        val message = getErrorMessage(name, noAnchors)
-        val userId = viewModelMainActivity.currentUser.value?.UserID
-
-        if (userId == null) {
-            if (message != null)
-                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
-            else
-                insertUserIntoDatabase()
+    private fun checkUser() {
+        val name = binding.name.text.toString()
+        if (viewModelMainActivity.renderer.wrappedAnchors.isEmpty()) {
+            makeToast("Erst Objekt platzieren!")
         } else {
-            if (noAnchors)
-                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
-            else
-                startChecking()
+            if (viewModelMainActivity.currentUser.value != null)
+                startUI()
+            else {
+                lifecycleScope.launch(Dispatchers.Main) {
+
+                    if (name.isEmpty())
+                        makeToast("Erst Namen eingeben")
+                    else {
+                        viewModelMainActivity.currentTestCase.observe(viewLifecycleOwner) { testcase ->
+                            if (testcase != null) {
+                                startUI()
+                                viewModelMainActivity.currentTestCase.removeObservers(
+                                    viewLifecycleOwner
+                                )
+                            }
+                        }
+                        viewModelMainActivity.insertUser(name)
+                    }
+                }
+            }
         }
     }
 
-    //checks for the current users scenario and test case. if last user was done with the tasks,
-    //create new one
-    private fun startChecking() {
+    private fun makeToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
 
-
-    private fun getErrorMessage(name: String, noAnchors: Boolean): String? {
-        return when {
-            noAnchors -> "Bitte erst Objekt platzieren"
-
-            name.isEmpty() -> "Bitte erst Namen eintragen"
-
-            else -> null
-        }
-    }
-
-    private fun insertUserIntoDatabase() {
-
-        val user = User(Username = name)
-        lifecycleScope.launch {
-//            saveUser(user)
-//            saveScenario()
-//            saveTestCase()
-            startUI()
-        }
-    }
-
-    //Todo work with livedata for this
     private fun startUI() {
 
+        viewModelMainActivity.setDatabaseObjectsSet(false)
         viewModelMainActivity.createTarget()
-        viewModelMainActivity.setClickable(false)
         viewModelMainActivity.placeTargetOnNewPosition()
         viewModelMainActivity.placeObjectInFocus()
 
         this.dismiss()
 
+    }
+
+    override fun onDestroyView() {
+        viewModelMainActivity.currentTestCase.removeObservers(viewLifecycleOwner)
+        super.onDestroyView()
     }
 
     override fun onResume() {
