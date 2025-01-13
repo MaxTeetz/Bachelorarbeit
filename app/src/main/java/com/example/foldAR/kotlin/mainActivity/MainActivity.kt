@@ -111,18 +111,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModel.currentUser.observe(this) {
+
             viewModel.checkCurrentUser()
-            Log.d(TAG, it.toString())
+            Log.d(TAG, "User: $it")
         }
 
         viewModel.currentScenario.observe(this) {
             viewModel.checkCurrentScenario()
-            Log.d(TAG, it.toString())
+            Log.d(TAG, "Scenario: $it")
         }
 
         viewModel.currentTestCase.observe(this) {
             viewModel.checkCurrentTestCase()
-            Log.d(TAG, it.toString())
+            Log.d(TAG, "TestCase: $it")
         }
     }
 
@@ -169,7 +170,7 @@ class MainActivity : AppCompatActivity() {
 
         MaterialAlertDialogBuilder(this)
             .setTitle(getString(android.R.string.dialog_alert_title))
-            .setMessage("${viewModel.targetIndex.value!!}/20")
+            .setMessage("${viewModel.targetIndex.value!! - 1}/20")
             .setCancelable(false)
             .setPositiveButton("Nächste Runde") { dialogInterface, _ -> //Todo disable reached until both are placed
                 if (renderer.wrappedAnchors.isNotEmpty()) {
@@ -195,22 +196,30 @@ class MainActivity : AppCompatActivity() {
     private fun setUpNextRoundObserver() {
         var flag = true
         viewModel.targetIndex.observe(this) {
-            if (flag)
-                flag = false
-            else
-                if (it == maxTargets - 1) {
-                    renderer.deleteAnchor()
-                    viewModel.resetTargetIndex()
-                    Toast.makeText(
-                        this,
-                        "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
-                        Toast.LENGTH_LONG
-                    ).show()
+            if (it > 0) {
+                Log.d(TAG, "TargetIndex")
+                if (flag)
+                    flag = false
+                else {
+                    if (it == maxTargets + 1) {
+                        showAlert()
 
-                    viewModel.setClickable(true)
-                    tapHelper.onResume()
-                } else
-                    showAlert()
+                        renderer.deleteAnchor()
+                        viewModel.resetTargetIndex()
+
+                        Toast.makeText(
+                            this,
+                            "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        viewModel.setClickable(true)
+                        tapHelper.onResume()
+
+                    } else
+                        showAlert()
+                }
+            }
         }
     }
 

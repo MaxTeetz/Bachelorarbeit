@@ -23,9 +23,7 @@ class DatabaseViewModel(
 ) : ViewModel() {
 
     suspend fun insertUser(user: User) {
-        viewModelScope.launch {
             usersDAO.insertUser(user)
-        }
     }
 
     suspend fun insertScenario(scenario: Scenario) {
@@ -49,14 +47,6 @@ class DatabaseViewModel(
         }
     }
 
-
-    //if testCase done just start dialog after setting testCase and scenario number else
-    suspend fun scenarioGetTestCases(id: Int): List<TestCase> {
-        return withContext(Dispatchers.IO) {
-            testCaseDAO.getTestCaseByScenarioId(id)
-        }
-    }
-
     //if app crashes and testCase of scenario is not finished, delete the data for it to fill it again
     suspend fun getLastTestCaseOfScenario(id: Int): TestCase? {
         return withContext(Dispatchers.IO) {
@@ -65,7 +55,7 @@ class DatabaseViewModel(
     }
 
     fun deleteDataSet(testCaseId: Int) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             dataSetsDAO.deleteDataSetsForTestCase(testCaseId)
         }
     }

@@ -171,11 +171,11 @@ class MainActivityViewModel : ViewModel() {
     //places object around the user; gets data from constant values
     fun placeTargetOnNewPosition() {
 
-        if (targetIndex.value!! < Constants.maxTargets) {
+        if (targetIndex.value!! <= Constants.maxTargets) {
             val rotation = renderer.refreshAngle()
             val camPos = renderer.camera.value!!.pose
 
-            val position = ObjectCoords.positions[targetIndex.value!!]
+            val position = ObjectCoords.positions[targetIndex.value!! - 1]
 
             val newX = position.first.toFloat()
             val newZ = -position.second.toFloat()
@@ -204,7 +204,10 @@ class MainActivityViewModel : ViewModel() {
             _dataBaseObjectsSet.value = true
         } else {
             if (currentUser.value!!.Done) {
+                Log.d("DeleteUserTest", "OK")
+                renderer.deleteAnchor()
                 _currentUser.value = null
+
             } else {
                 viewModelScope.launch(Dispatchers.IO) {
                     _currentScenario.postValue(database.getLastScenarioByUserId(currentUser.value!!.UserID))
@@ -214,9 +217,10 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun checkCurrentScenario() {
-        //erstmal Nutzer nicht aus DB löschen. Egal, wenn Nutzer leer
         if (currentScenario.value == null) {
-            createNewScenario()
+            viewModelScope.launch(Dispatchers.IO) {
+                createNewScenario()
+            }
         } else
             viewModelScope.launch(Dispatchers.IO) {
                 _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
@@ -236,12 +240,16 @@ class MainActivityViewModel : ViewModel() {
                 if (renderer.wrappedAnchors.size != 2)
                     _dataBaseObjectsSet.value = true
             } else {
-                if (currentTestCase.value!!.TestCaseName == Constants.maxTargets - 1) {
+                if (currentTestCase.value!!.TestCaseName == Constants.maxTargets) {
                     if (currentScenario.value!!.ScenarioName == 2) {
-                        setUserDone()
+                        viewModelScope.launch(Dispatchers.IO) {
+                            setUserDone()
+                        }
                     } else {
-                        createNewScenario()
-                        _dataBaseObjectsSet.value = true
+                        viewModelScope.launch(Dispatchers.IO) {
+                            createNewScenario()
+                            _dataBaseObjectsSet.postValue(true)
+                        }
                     }
                 } else {
                     createTestCase()
@@ -250,7 +258,7 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-    private fun createNewScenario() {
+    private suspend fun createNewScenario() {
         Log.d("TestingDatabase", "scenario")
 
         if (currentUser.value != null) {
@@ -260,19 +268,14 @@ class MainActivityViewModel : ViewModel() {
                 UserID = currentUser.value!!.UserID,
                 ScenarioName = scenarioName
             )
-
-            viewModelScope.launch(Dispatchers.IO) {
-                database.insertScenario(scenario)
-                _currentScenario.postValue(database.getLastScenarioByUserId(currentUser.value!!.UserID))
-            }
+            database.insertScenario(scenario)
+            _currentScenario.postValue(database.getLastScenarioByUserId(currentUser.value!!.UserID))
         }
     }
 
-    private fun setUserDone() { //Todo check completely
-        viewModelScope.launch(Dispatchers.IO) {
-            database.updateUser(currentUser.value!!.UserID)
-            _currentUser.postValue(database.getLastUser())
-        }
+    private suspend fun setUserDone() { //Todo check completely
+        database.updateUser(currentUser.value!!.UserID)
+        _currentUser.postValue(database.getLastUser())
     }
 
     private fun createTestCase() {
