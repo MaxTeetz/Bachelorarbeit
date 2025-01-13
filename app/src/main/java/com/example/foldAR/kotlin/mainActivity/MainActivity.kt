@@ -90,6 +90,7 @@ class MainActivity : AppCompatActivity() {
         setUpNextTargetObserver()
         setUpDatabaseObservers()
         setUpDatabase()
+//        setUpFrameObserver()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -129,6 +130,13 @@ class MainActivity : AppCompatActivity() {
         viewModel.currentTestCase.observe(this) {
             viewModel.checkCurrentTestCase()
             Log.d(TAG, "TestCase: $it")
+        }
+    }
+
+    private fun setUpFrameObserver() {
+        renderer.camera.observe(this) {
+            if(viewModel.counting)
+                viewModel.insertDataSet()
         }
     }
 

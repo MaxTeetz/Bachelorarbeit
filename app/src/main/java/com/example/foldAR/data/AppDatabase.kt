@@ -13,7 +13,7 @@ import com.example.foldAR.data.entities.Scenario
 import com.example.foldAR.data.entities.TestCase
 import com.example.foldAR.data.entities.User
 
-@Database(entities = [User::class, Scenario::class, TestCase::class, DataSet::class], version = 1, exportSchema = false)
+@Database(entities = [User::class, Scenario::class, TestCase::class, DataSet::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase(){
     abstract fun usersDao(): UsersDAO
     abstract fun scenariosDao(): ScenariosDAO
@@ -31,7 +31,7 @@ abstract class AppDatabase : RoomDatabase(){
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .fallbackToDestructiveMigrationFrom()
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 return instance

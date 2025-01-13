@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foldAR.data.DatabaseViewModel
+import com.example.foldAR.data.entities.DataSet
 import com.example.foldAR.data.entities.Scenario
 import com.example.foldAR.data.entities.TestCase
 import com.example.foldAR.data.entities.User
@@ -38,6 +39,9 @@ class MainActivityViewModel : ViewModel() {
 
     private var _dataBaseObjectsSet: MutableLiveData<Boolean> = MutableLiveData(false)
     val dataBaseObjectsSet get() = _dataBaseObjectsSet
+
+    private var _counting: Boolean = false
+    val counting get() = _counting
 
     //set false if new ui is loaded
     fun setDatabaseObjectsSet(case: Boolean) {
@@ -295,6 +299,7 @@ class MainActivityViewModel : ViewModel() {
                 database.insertTestCase(testCase)
 
                 _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
+                _counting = true
             }
         }
     }
@@ -306,6 +311,7 @@ class MainActivityViewModel : ViewModel() {
 
         viewModelScope.launch(Dispatchers.IO) {
             database.updateTestCase(currentTime, currentTestCase.value!!.TestCaseID)
+            _counting = false
             _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
         }
     }
@@ -314,6 +320,28 @@ class MainActivityViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             database.insertUser(User(Username = name))
             _currentUser.postValue(database.getLastUser())
+        }
+    }
+
+    fun insertDataSet() {
+        val camera = renderer.camera.value!!.pose
+        val anchors = renderer.wrappedAnchors[0].anchor.pose
+        viewModelScope.launch(Dispatchers.IO) {
+            database.insertDataSet(
+                DataSet(
+                    TestCaseID = currentTestCase.value!!.TestCaseID,
+                    Time = System.currentTimeMillis().toString(),
+                    CameraPositionX = camera.tx(),
+                    CameraPositionY = camera.ty(),
+                    CameraPositionZ = camera.tz(),
+                    CameraRoatationX = camera.qx(),
+                    CameraRoatationY = camera.ty(),
+                    CameraRoatationZ = camera.qz(),
+                    Location_ManipulatedObjectX = anchors.tx(),
+                    Location_ManipulatedObjectY = anchors.ty(),
+                    Location_ManipulatedObjectZ = anchors.tz(),
+                )
+            )
         }
     }
 }
