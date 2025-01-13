@@ -113,6 +113,11 @@ class MainActivity : AppCompatActivity() {
         viewModel.currentUser.observe(this) {
 
             viewModel.checkCurrentUser()
+
+            if (it != null) {
+                if (it.Done)
+                    tapHelper.onResume()
+            }
             Log.d(TAG, "User: $it")
         }
 
@@ -160,29 +165,6 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    //shows alert if target is reached
-    private fun showAlert() {
-
-        if (isAlertDialogOpen) {
-            return
-        }
-        isAlertDialogOpen = true
-
-        MaterialAlertDialogBuilder(this)
-            .setTitle(getString(android.R.string.dialog_alert_title))
-            .setMessage("${viewModel.targetIndex.value!! - 1}/20")
-            .setCancelable(false)
-            .setPositiveButton("Nächste Runde") { dialogInterface, _ -> //Todo disable reached until both are placed
-                if (renderer.wrappedAnchors.isNotEmpty()) {
-                    viewModel.placeTargetOnNewPosition()
-                    viewModel.placeObjectInFocus()
-                    renderer.resetReached()
-                }
-                dialogInterface.dismiss()
-            }.setOnDismissListener { isAlertDialogOpen = false }
-            .show()
-    }
-
     //next target within scenario
     private fun setUpNextTargetObserver() {
         renderer.reached.observe(this) {
@@ -221,6 +203,29 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    //shows alert if target is reached
+    private fun showAlert() {
+
+        if (isAlertDialogOpen) {
+            return
+        }
+        isAlertDialogOpen = true
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(android.R.string.dialog_alert_title))
+            .setMessage("${viewModel.targetIndex.value!! - 1}/20")
+            .setCancelable(false)
+            .setPositiveButton("Nächste Runde") { dialogInterface, _ -> //Todo disable reached until both are placed
+                if (renderer.wrappedAnchors.isNotEmpty()) {
+                    viewModel.placeTargetOnNewPosition()
+                    viewModel.placeObjectInFocus()
+                    renderer.resetReached()
+                }
+                dialogInterface.dismiss()
+            }.setOnDismissListener { isAlertDialogOpen = false }
+            .show()
     }
 
     /**

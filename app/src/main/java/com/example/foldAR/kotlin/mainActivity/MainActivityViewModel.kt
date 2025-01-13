@@ -207,7 +207,9 @@ class MainActivityViewModel : ViewModel() {
                 Log.d("DeleteUserTest", "OK")
                 renderer.deleteAnchor()
                 _currentUser.value = null
-
+                _currentScenario.value = null
+                _currentTestCase.value = null
+                resetTargetIndex()
             } else {
                 viewModelScope.launch(Dispatchers.IO) {
                     _currentScenario.postValue(database.getLastScenarioByUserId(currentUser.value!!.UserID))
