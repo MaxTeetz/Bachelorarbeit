@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         setUpNextTargetObserver()
         setUpDatabaseObservers()
         setUpDatabase()
-//        setUpFrameObserver()
+        setUpFrameObserver()
     }
 
     @SuppressLint("ClickableViewAccessibility")
