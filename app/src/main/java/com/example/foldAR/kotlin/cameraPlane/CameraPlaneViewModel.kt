@@ -30,7 +30,7 @@ class CameraPlaneViewModel : ViewModel() {
         private const val midPoint = bitmapSizeFloat / 2
         private const val radius = 5f
 
-        private val  paintObjects = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        private val paintObjects = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.RED
             strokeWidth = 2f
         }
@@ -119,11 +119,12 @@ class CameraPlaneViewModel : ViewModel() {
         }
     }
 
-    private fun combineBitmaps() : Bitmap{
-        val combinedBitmap = Bitmap.createBitmap(Constants.bitmapSize, Constants.bitmapSize, bitmap.config)
+    private fun combineBitmaps(): Bitmap {
+        val combinedBitmap =
+            Bitmap.createBitmap(Constants.bitmapSize, Constants.bitmapSize, bitmap.config)
         val canvas = Canvas(combinedBitmap)
-        canvas.drawBitmap(bitmapCoordinateSystem, 0f,0f, null)
-        canvas.drawBitmap(bitmap, 0f,0f,null)
+        canvas.drawBitmap(bitmapCoordinateSystem, 0f, 0f, null)
+        canvas.drawBitmap(bitmap, 0f, 0f, null)
         return combinedBitmap
     }
 
@@ -159,22 +160,23 @@ class CameraPlaneViewModel : ViewModel() {
     /**Moving the anchor to the point clicked by rotating the point by the phones yaw and adding the cameras
      * position to it.
      * */
-    fun moveAnchors(event: MotionEvent, view: View): Pair<Float, Float> {
+    fun moveAnchors(
+        startingPoint: Pair<Float, Float>,
+        event: MotionEvent,
+        view: View
+    ): Pair<Float, Float> {
 
         val scaleFactorX = bitmap.width.toFloat() / view.width
         val scaleFactorY = bitmap.height.toFloat() / view.height
 
-        val pointX = (event.x * scaleFactorX) - center
-        val pointZ = (event.y * scaleFactorY) - center
+        val pointX = (event.x - startingPoint.first) * scaleFactorX
+        val pointZ = (event.y - startingPoint.second) * scaleFactorY
 
         val newX = -(pointX / (Constants.meterToCm))
         val newZ = (pointZ / (Constants.meterToCm))
 
-        val x1 = (cos(rotation) * newX - sin(rotation) * newZ) * range
-        val z1 = (sin(rotation) * newX + cos(rotation) * newZ) * range
-
-        val x = x1 + camPosX
-        val z = -z1 + camPosZ
+        val x = (cos(rotation) * newX - sin(rotation) * newZ) * range
+        val z = -(sin(rotation) * newX + cos(rotation) * newZ) * range
 
         return Pair(x, z)
     }
@@ -199,10 +201,20 @@ class CameraPlaneViewModel : ViewModel() {
 
         // Draw arrow heads for x-axis
         drawLine(
-            bitmapSizeFloat, midPoint, bitmapSizeFloat - endOffset, midPoint - endOffset, paintAxis, canvas
+            bitmapSizeFloat,
+            midPoint,
+            bitmapSizeFloat - endOffset,
+            midPoint - endOffset,
+            paintAxis,
+            canvas
         )
         drawLine(
-            bitmapSizeFloat, midPoint, bitmapSizeFloat - endOffset, midPoint + endOffset, paintAxis, canvas
+            bitmapSizeFloat,
+            midPoint,
+            bitmapSizeFloat - endOffset,
+            midPoint + endOffset,
+            paintAxis,
+            canvas
         )
 
         // Draw arrow heads for y-axis
@@ -221,22 +233,49 @@ class CameraPlaneViewModel : ViewModel() {
         var i = 1f
         do {
             drawLine(
-                midPoint - (distance * i), 0f, midPoint - (distance * i), bitmapSizeFloat, paintGrid, canvas
+                midPoint - (distance * i),
+                0f,
+                midPoint - (distance * i),
+                bitmapSizeFloat,
+                paintGrid,
+                canvas
             )
             drawLine(
-                midPoint + (distance * i), 0f, midPoint + (distance * i), bitmapSizeFloat, paintGrid, canvas
+                midPoint + (distance * i),
+                0f,
+                midPoint + (distance * i),
+                bitmapSizeFloat,
+                paintGrid,
+                canvas
             )
             drawLine(
-                0f, midPoint - (distance * i), bitmapSizeFloat, midPoint - (distance * i), paintGrid, canvas
+                0f,
+                midPoint - (distance * i),
+                bitmapSizeFloat,
+                midPoint - (distance * i),
+                paintGrid,
+                canvas
             )
             drawLine(
-                0f, midPoint + (distance * i), bitmapSizeFloat, midPoint + (distance * i), paintGrid, canvas
+                0f,
+                midPoint + (distance * i),
+                bitmapSizeFloat,
+                midPoint + (distance * i),
+                paintGrid,
+                canvas
             )
 
             i++
         } while (i < _range + 1)
     }
 
-    private fun drawLine(startX: Float, startY: Float, endX: Float, endY: Float, paint: Paint, canvas: Canvas) =
+    private fun drawLine(
+        startX: Float,
+        startY: Float,
+        endX: Float,
+        endY: Float,
+        paint: Paint,
+        canvas: Canvas
+    ) =
         canvas.drawLine(startX, startY, endX, endY, paint)
 }

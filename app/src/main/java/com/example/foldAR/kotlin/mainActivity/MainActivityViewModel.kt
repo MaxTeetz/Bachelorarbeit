@@ -139,7 +139,7 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun changeAnchorsPlaneCamera(position: Pair<Float, Float>) =
-        renderer.moveAnchorPlane(position.first, position.second, currentPosition.value!!)
+        renderer.moveAnchorPlane(position.first + pose!!.tx(), position.second + pose!!.tz(), currentPosition.value!!)
 
     fun setPose() {
         renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {

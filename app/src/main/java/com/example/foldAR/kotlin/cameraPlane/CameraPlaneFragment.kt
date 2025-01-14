@@ -30,8 +30,9 @@ class CameraPlaneFragment : Fragment() {
     private val coroutineScope1 = CoroutineScope(coroutine1 + Dispatchers.Main)
 
     private var scaleFactor = Constants.scaleFactor
-    private var time: Long = 0
     private var previousCount = 0
+
+    private lateinit var startingPoint: Pair<Float, Float>
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -105,21 +106,21 @@ class CameraPlaneFragment : Fragment() {
                 scaleGestureDetector.onTouchEvent(event)
 
                 if (event.pointerCount != previousCount) {
-                    time = System.currentTimeMillis()
                     previousCount = event.pointerCount
                 }
 
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
-                        time = System.currentTimeMillis()
+                        this.startingPoint = Pair(event.x, event.y)
+                        viewModelActivity.setPose()
                     }
 
                     MotionEvent.ACTION_MOVE ->
-                        if (previousCount == 1 && System.currentTimeMillis() - time > 200) {
-                            if(event.y >= 0)
-                            viewModelActivity.changeAnchorsPlaneCamera(
-                                viewModel.moveAnchors(event, binding.imageMoveObjectPlane)
-                            )
+                        if (previousCount == 1) {
+                            if (event.y >= 0)
+                                viewModelActivity.changeAnchorsPlaneCamera(
+                                    viewModel.moveAnchors(this.startingPoint, event, binding.imageMoveObjectPlane)
+                                )
 
                         }
                 }
