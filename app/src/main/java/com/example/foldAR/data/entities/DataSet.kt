@@ -23,7 +23,11 @@ data class DataSet(
     val CameraRoatationX: Float,
     val CameraRoatationY: Float,
     val CameraRoatationZ: Float,
+    val CameraRoatationW: Float,
     val Location_ManipulatedObjectX: Float,
     val Location_ManipulatedObjectY: Float,
     val Location_ManipulatedObjectZ: Float,
+    val Location_TargetObjectX: Float,
+    val Location_TargetObjectY: Float,
+    val Location_TargetObjectZ: Float,
 )

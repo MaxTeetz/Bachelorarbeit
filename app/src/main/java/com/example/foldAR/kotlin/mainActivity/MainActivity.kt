@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpFrameObserver() {
         renderer.camera.observe(this) {
-            if(viewModel.counting)
+            if (viewModel.counting)
                 viewModel.insertDataSet()
         }
     }
@@ -223,7 +223,7 @@ class MainActivity : AppCompatActivity() {
 
         MaterialAlertDialogBuilder(this)
             .setTitle(getString(android.R.string.dialog_alert_title))
-            .setMessage("${viewModel.targetIndex.value!! - 1}/20")
+            .setMessage("${viewModel.testCase}/20")
             .setCancelable(false)
             .setPositiveButton("Nächste Runde") { dialogInterface, _ -> //Todo disable reached until both are placed
                 if (renderer.wrappedAnchors.isNotEmpty()) {

@@ -43,6 +43,8 @@ class MainActivityViewModel : ViewModel() {
     private var _counting: Boolean = false
     val counting get() = _counting
 
+    var testCase = 0
+
     //set false if new ui is loaded
     fun setDatabaseObjectsSet(case: Boolean) {
         _dataBaseObjectsSet.value = case
@@ -308,7 +310,7 @@ class MainActivityViewModel : ViewModel() {
     fun updateTestCase() {
         val currentTime = System.currentTimeMillis().toString()
         Log.d("SpecificTest", "testing the update")
-
+        this.testCase = targetIndex.value!!
         viewModelScope.launch(Dispatchers.IO) {
             database.updateTestCase(currentTime, currentTestCase.value!!.TestCaseID)
             _counting = false
@@ -325,7 +327,8 @@ class MainActivityViewModel : ViewModel() {
 
     fun insertDataSet() {
         val camera = renderer.camera.value!!.pose
-        val anchors = renderer.wrappedAnchors[0].anchor.pose
+        val movingObject = renderer.wrappedAnchors[0].anchor.pose
+        val targetObject = renderer.wrappedAnchors[1].anchor.pose
         viewModelScope.launch(Dispatchers.IO) {
             database.insertDataSet(
                 DataSet(
@@ -337,9 +340,13 @@ class MainActivityViewModel : ViewModel() {
                     CameraRoatationX = camera.qx(),
                     CameraRoatationY = camera.ty(),
                     CameraRoatationZ = camera.qz(),
-                    Location_ManipulatedObjectX = anchors.tx(),
-                    Location_ManipulatedObjectY = anchors.ty(),
-                    Location_ManipulatedObjectZ = anchors.tz(),
+                    CameraRoatationW = camera.qw(),
+                    Location_ManipulatedObjectX = movingObject.tx(),
+                    Location_ManipulatedObjectY = movingObject.ty(),
+                    Location_ManipulatedObjectZ = movingObject.tz(),
+                    Location_TargetObjectX =targetObject.tx(),
+                    Location_TargetObjectY =targetObject.ty(),
+                    Location_TargetObjectZ =targetObject.tz(),
                 )
             )
         }
