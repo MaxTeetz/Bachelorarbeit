@@ -60,7 +60,7 @@ class MainActivityViewModel : ViewModel() {
     val currentPosition get() = _currentPosition
 
     //map scaling
-    private var _scale: MutableLiveData<Float> = MutableLiveData<Float>(Constants.scaleFactor)
+    private var _scale: MutableLiveData<Float> = MutableLiveData<Float>(Constants.SCALE_FACTOR)
     val scale get() = _scale
 
     private var _touchEvent: MutableLiveData<MotionEvent> = MutableLiveData()
@@ -82,9 +82,9 @@ class MainActivityViewModel : ViewModel() {
         this._targetIndex.value = 0
     }
 
-    fun setScale(scale: Float) {
-        _scale.value = scale
-    }
+//    fun setScale(scale: Float) {
+//        _scale.value = scale
+//    }
 
     fun setClickable(b: Boolean) {
         this._clickable.value = b
@@ -121,7 +121,7 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun setScaleFactor(view: View) {
-        this.viewScale = (Constants.bitmapSize.toFloat() / view.height.toFloat())
+        this.viewScale = (Constants.BITMAP_SIZE.toFloat() / view.height.toFloat())
     }
 
     fun setInitialY(y: Float) {
@@ -177,7 +177,7 @@ class MainActivityViewModel : ViewModel() {
     //places object around the user; gets data from constant values
     fun placeTargetOnNewPosition() {
 
-        if (targetIndex.value!! <= Constants.maxTargets) {
+        if (targetIndex.value!! <= Constants.MAX_TARGETS) {
             val rotation = renderer.refreshAngle()
             val camPos = renderer.camera.value!!.pose
 
@@ -248,7 +248,7 @@ class MainActivityViewModel : ViewModel() {
                 if (renderer.wrappedAnchors.size != 2)
                     _dataBaseObjectsSet.value = true
             } else {
-                if (currentTestCase.value!!.TestCaseName == Constants.maxTargets) {
+                if (currentTestCase.value!!.TestCaseName == Constants.MAX_TARGETS) {
                     if (currentScenario.value!!.ScenarioName == 2) {
                         viewModelScope.launch(Dispatchers.IO) {
                             setUserDone()

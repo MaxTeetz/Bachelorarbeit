@@ -1,16 +1,14 @@
 package com.example.foldAR.java.helpers;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 
-import androidx.constraintlayout.widget.ConstraintSet;
-import androidx.lifecycle.ViewModelProvider;
+import androidx.annotation.NonNull;
 
-import com.example.foldAR.kotlin.mainActivity.MainActivity;
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -47,7 +45,7 @@ public final class TapHelper implements OnTouchListener {
             context,
             new GestureDetector.SimpleOnGestureListener() {
               @Override
-              public boolean onSingleTapUp(MotionEvent e) {
+              public boolean onSingleTapUp(@NonNull MotionEvent e) {
                 // Queue tap if there is space. Tap is lost if queue is full.
                   if(placement){ //Todo add center of screen here as a def value if camera wise isn´t working out
                       placement = false;
@@ -59,7 +57,7 @@ public final class TapHelper implements OnTouchListener {
               }
 
               @Override
-              public boolean onDown(MotionEvent e) {
+              public boolean onDown(@NonNull MotionEvent e) {
                 return true;
               }
             });
@@ -74,6 +72,7 @@ public final class TapHelper implements OnTouchListener {
     return queuedSingleTaps.poll();
   }
 
+  @SuppressLint("ClickableViewAccessibility")
   @Override
   public boolean onTouch(View view, MotionEvent motionEvent) {
 

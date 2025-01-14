@@ -3,16 +3,16 @@ package com.example.foldAR.kotlin.constants
 object Constants {
 
     //for object manipulation
-    const val meterToCm = 100
-    const val bitmapSize = 500
-    const val objectsMaxSize = 6
+    const val METER_TO_CM = 100
+    const val BITMAP_SIZE = 500
+    const val OBJECTS_MAX_SIZE = 6
 
     //For options menu
-    const val sliderMin = 1f
-    const val sliderMax = 5f
-    const val scaleFactor = 5f
+    const val SLIDER_MIN = 1f
+    const val SLIDER_MAX = 5f
+    const val SCALE_FACTOR = 5f
 
     //For testing
-    const val maxTargets =2
+    const val MAX_TARGETS = 2
 
 }

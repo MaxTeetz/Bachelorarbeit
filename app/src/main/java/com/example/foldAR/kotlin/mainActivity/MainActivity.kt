@@ -21,7 +21,7 @@ import com.example.foldAR.java.helpers.InstantPlacementSettings
 import com.example.foldAR.java.helpers.SnackbarHelper
 import com.example.foldAR.java.helpers.TapHelper
 import com.example.foldAR.java.samplerender.SampleRender
-import com.example.foldAR.kotlin.constants.Constants.maxTargets
+import com.example.foldAR.kotlin.constants.Constants.MAX_TARGETS
 import com.example.foldAR.kotlin.dialog.DialogObjectOptions
 import com.example.foldAR.kotlin.helloar.R
 import com.example.foldAR.kotlin.helloar.databinding.ActivityMainBinding
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
 
         val factory = DatabaseViewModelFactory(usersDAO, scenariosDAO, testCaseDAO, dataSetsDAO)
 
-        databaseViewModel = ViewModelProvider(this, factory).get(DatabaseViewModel::class.java)
+        databaseViewModel = ViewModelProvider(this, factory)[DatabaseViewModel::class.java]
 
         setContentView(binding.root)
         setupBinding()
@@ -191,7 +191,7 @@ class MainActivity : AppCompatActivity() {
                 if (flag)
                     flag = false
                 else {
-                    if (it == maxTargets + 1) {
+                    if (it == MAX_TARGETS + 1) {
                         showAlert()
 
                         renderer.deleteAnchor()

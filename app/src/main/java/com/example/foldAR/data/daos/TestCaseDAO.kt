@@ -10,10 +10,6 @@ interface TestCaseDAO {
     @Insert
     suspend fun insertTestCase(testCase: TestCase)
 
-    @Query("SELECT * FROM TestCase WHERE ScenarioID = :scenarioId ORDER BY TestCaseID DESC")
-    suspend fun getTestCaseByScenarioId(scenarioId: Int): List<TestCase>
-
-
     //check if the last testCase of the scenario was finished in case the app crashes -> used for deleting DataSets
     @Query("SELECT * FROM TestCase WHERE ScenarioID = :scenarioId ORDER BY TestCaseID DESC LIMIT 1")
     suspend fun getLastTestCaseOfScenario(scenarioId: Int): TestCase?

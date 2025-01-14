@@ -25,10 +25,10 @@ class CameraPlaneViewModel : ViewModel() {
 
     //Only formatting because I need to call Constants less
     companion object {
-        private const val bitmapSize = Constants.bitmapSize
-        private const val bitmapSizeFloat = Constants.bitmapSize.toFloat()
-        private const val midPoint = bitmapSizeFloat / 2
-        private const val radius = 5f
+        private const val BITMAP_SIZE = Constants.BITMAP_SIZE
+        private const val BITMAP_SIZE_FLOAT = Constants.BITMAP_SIZE.toFloat()
+        private const val MID_POINT = BITMAP_SIZE_FLOAT / 2
+        private const val RADIUS = 5f
 
         private val paintObjects = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.RED
@@ -69,21 +69,21 @@ class CameraPlaneViewModel : ViewModel() {
     private var camPosX = 0f
     private var camPosZ = 0f
     private var rotation: Float = 0f
-    private var center = bitmapSize / 2
+    private var center = BITMAP_SIZE / 2
 
     private val bitmap: Bitmap =
-        Bitmap.createBitmap(bitmapSize, bitmapSize, Bitmap.Config.ARGB_8888)
+        Bitmap.createBitmap(BITMAP_SIZE, BITMAP_SIZE, Bitmap.Config.ARGB_8888)
 
     private val bitmapCoordinateSystem: Bitmap =
-        Bitmap.createBitmap(bitmapSize, bitmapSize, Bitmap.Config.ARGB_8888)
+        Bitmap.createBitmap(BITMAP_SIZE, BITMAP_SIZE, Bitmap.Config.ARGB_8888)
 
     fun setRange(range: Float) {
-        if (range in Constants.sliderMin..Constants.sliderMax)
+        if (range in Constants.SLIDER_MIN..Constants.SLIDER_MAX)
             _range = range
     }
 
     fun setCurrentPosition(position: Int) {
-        if (position in 0..Constants.objectsMaxSize + 1)
+        if (position in 0..Constants.OBJECTS_MAX_SIZE + 1)
             _currentPosition = position
     }
 
@@ -121,7 +121,7 @@ class CameraPlaneViewModel : ViewModel() {
 
     private fun combineBitmaps(): Bitmap {
         val combinedBitmap =
-            Bitmap.createBitmap(Constants.bitmapSize, Constants.bitmapSize, bitmap.config)
+            Bitmap.createBitmap(Constants.BITMAP_SIZE, Constants.BITMAP_SIZE, bitmap.config)
         val canvas = Canvas(combinedBitmap)
         canvas.drawBitmap(bitmapCoordinateSystem, 0f, 0f, null)
         canvas.drawBitmap(bitmap, 0f, 0f, null)
@@ -136,8 +136,8 @@ class CameraPlaneViewModel : ViewModel() {
     ) {
 
         val canvas = Canvas(bitmap)
-        val newX = (poseX - camPosX) * (Constants.meterToCm)
-        val newZ = (poseZ - camPosZ) * (Constants.meterToCm)
+        val newX = (poseX - camPosX) * (Constants.METER_TO_CM)
+        val newZ = (poseZ - camPosZ) * (Constants.METER_TO_CM)
 
         val newRotatedX = (cos(rotation) * newX - sin(rotation) * newZ) / range
         val newRotatedZ = (sin(rotation) * newX + cos(rotation) * newZ) / range
@@ -145,7 +145,7 @@ class CameraPlaneViewModel : ViewModel() {
         canvas.drawCircle(
             (-newRotatedX + center),
             (-newRotatedZ + center),
-            radius,
+            RADIUS,
             if (index == currentPosition) paintObjectChosen else paintObjects
         )
     }
@@ -172,8 +172,8 @@ class CameraPlaneViewModel : ViewModel() {
         val pointX = (event.x - startingPoint.first) * scaleFactorX
         val pointZ = (event.y - startingPoint.second) * scaleFactorY
 
-        val newX = -(pointX / (Constants.meterToCm))
-        val newZ = (pointZ / (Constants.meterToCm))
+        val newX = -(pointX / (Constants.METER_TO_CM))
+        val newZ = (pointZ / (Constants.METER_TO_CM))
 
         val x = (cos(rotation) * newX - sin(rotation) * newZ) * range
         val z = -(sin(rotation) * newX + cos(rotation) * newZ) * range
@@ -196,71 +196,71 @@ class CameraPlaneViewModel : ViewModel() {
         val endOffset = 20f
 
         // Draw horizontal and vertical lines
-        drawLine(0f, midPoint, bitmapSizeFloat, midPoint, paintAxis, canvas)
-        drawLine(midPoint, 0f, midPoint, bitmapSizeFloat, paintAxis, canvas)
+        drawLine(0f, MID_POINT, BITMAP_SIZE_FLOAT, MID_POINT, paintAxis, canvas)
+        drawLine(MID_POINT, 0f, MID_POINT, BITMAP_SIZE_FLOAT, paintAxis, canvas)
 
         // Draw arrow heads for x-axis
         drawLine(
-            bitmapSizeFloat,
-            midPoint,
-            bitmapSizeFloat - endOffset,
-            midPoint - endOffset,
+            BITMAP_SIZE_FLOAT,
+            MID_POINT,
+            BITMAP_SIZE_FLOAT - endOffset,
+            MID_POINT - endOffset,
             paintAxis,
             canvas
         )
         drawLine(
-            bitmapSizeFloat,
-            midPoint,
-            bitmapSizeFloat - endOffset,
-            midPoint + endOffset,
+            BITMAP_SIZE_FLOAT,
+            MID_POINT,
+            BITMAP_SIZE_FLOAT - endOffset,
+            MID_POINT + endOffset,
             paintAxis,
             canvas
         )
 
         // Draw arrow heads for y-axis
         drawLine(
-            midPoint, 0f, midPoint - endOffset, endOffset, paintAxis, canvas
+            MID_POINT, 0f, MID_POINT - endOffset, endOffset, paintAxis, canvas
         )
         drawLine(
-            midPoint, 0f, midPoint + endOffset, endOffset, paintAxis, canvas
+            MID_POINT, 0f, MID_POINT + endOffset, endOffset, paintAxis, canvas
         )
     }
 
     private fun drawGrid(canvas: Canvas) {
 
-        val distance = (bitmapSize / 2) / (_range + 1)
+        val distance = (BITMAP_SIZE / 2) / (_range + 1)
 
         var i = 1f
         do {
             drawLine(
-                midPoint - (distance * i),
+                MID_POINT - (distance * i),
                 0f,
-                midPoint - (distance * i),
-                bitmapSizeFloat,
+                MID_POINT - (distance * i),
+                BITMAP_SIZE_FLOAT,
                 paintGrid,
                 canvas
             )
             drawLine(
-                midPoint + (distance * i),
+                MID_POINT + (distance * i),
                 0f,
-                midPoint + (distance * i),
-                bitmapSizeFloat,
-                paintGrid,
-                canvas
-            )
-            drawLine(
-                0f,
-                midPoint - (distance * i),
-                bitmapSizeFloat,
-                midPoint - (distance * i),
+                MID_POINT + (distance * i),
+                BITMAP_SIZE_FLOAT,
                 paintGrid,
                 canvas
             )
             drawLine(
                 0f,
-                midPoint + (distance * i),
-                bitmapSizeFloat,
-                midPoint + (distance * i),
+                MID_POINT - (distance * i),
+                BITMAP_SIZE_FLOAT,
+                MID_POINT - (distance * i),
+                paintGrid,
+                canvas
+            )
+            drawLine(
+                0f,
+                MID_POINT + (distance * i),
+                BITMAP_SIZE_FLOAT,
+                MID_POINT + (distance * i),
                 paintGrid,
                 canvas
             )

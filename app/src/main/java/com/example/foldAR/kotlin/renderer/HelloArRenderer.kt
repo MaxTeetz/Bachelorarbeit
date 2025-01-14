@@ -112,7 +112,6 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     lateinit var secondAnchor: WrappedAnchor
 
     val wrappedAnchors = Collections.synchronizedList(mutableListOf<WrappedAnchor>())
-    val wrappedAnchorsLiveData = MutableLiveData<List<WrappedAnchor>>()
 
     private var _reached: MutableLiveData<Boolean> = MutableLiveData(false)
     val reached get() = _reached
@@ -488,7 +487,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             }
         }
 
-        if (firstHitResult != null && wrappedAnchors.size <= Constants.objectsMaxSize) {
+        if (firstHitResult != null && wrappedAnchors.size <= Constants.OBJECTS_MAX_SIZE) {
             // Cap the number of objects created. This avoids overloading both the
             // rendering system and ARCore.
             // Adding an Anchor tells ARCore that it should track this position in
