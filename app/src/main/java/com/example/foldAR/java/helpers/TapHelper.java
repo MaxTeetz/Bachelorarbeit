@@ -21,10 +21,10 @@ import java.util.concurrent.BlockingQueue;
 public final class TapHelper implements OnTouchListener {
 
     private final MainActivityViewModel viewModel;
-    private Long time = 0L;
     private int previousCount = 0;
     private Float currentMain = 0f;
 
+    private int dimension;
 
     //simple check to see if placement or moving action
     Boolean placement = true; //Todo for not lazy person
@@ -38,8 +38,10 @@ public final class TapHelper implements OnTouchListener {
    *
    * @param context the application's context.
    */
-  public TapHelper(Context context, MainActivityViewModel viewModel) {
+  public TapHelper(Context context, MainActivityViewModel viewModel, int dimensions) {
       this.viewModel = viewModel;
+      this.dimension = dimensions;
+
     gestureDetector =
         new GestureDetector(
             context,
@@ -77,7 +79,6 @@ public final class TapHelper implements OnTouchListener {
   public boolean onTouch(View view, MotionEvent motionEvent) {
 
       if (motionEvent.getPointerCount() != previousCount) {
-          time = System.currentTimeMillis();
           previousCount = motionEvent.getPointerCount();
           if(motionEvent.getPointerCount() == 2) {
               currentMain = motionEvent.getX(0);
@@ -88,13 +89,12 @@ public final class TapHelper implements OnTouchListener {
       if(!placement){
           if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
               viewModel.setInitialY(motionEvent.getY());
-              time = System.currentTimeMillis();
               viewModel.setPose();
           }
           if(previousCount == 2){
               viewModel.rotateObject(motionEvent, currentMain);
           }
-          if (motionEvent.getAction() == MotionEvent.ACTION_MOVE && previousCount == 1 && System.currentTimeMillis() - time > 200) {
+          if (motionEvent.getAction() == MotionEvent.ACTION_MOVE && previousCount == 1 && motionEvent.getY() < dimension) {
               viewModel.setTouchEvent(motionEvent);
           }
       }

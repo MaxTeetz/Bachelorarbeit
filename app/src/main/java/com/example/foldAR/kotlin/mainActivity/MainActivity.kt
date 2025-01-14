@@ -96,9 +96,13 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("ClickableViewAccessibility")
     private fun setupBinding() {
         surfaceView = findViewById(R.id.surfaceview)
-        tapHelper = TapHelper(this, viewModel).also {
+        tapHelper = TapHelper(this, viewModel, getSurfaceViewDimensions()).also {
             surfaceView.setOnTouchListener(it)
         }
+    }
+
+    private fun getSurfaceViewDimensions() : Int{
+        return binding.surfaceview.layoutParams.height
     }
 
     private fun setUpDatabase() {
