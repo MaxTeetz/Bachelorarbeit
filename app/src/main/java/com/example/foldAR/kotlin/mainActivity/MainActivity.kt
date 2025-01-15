@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getSurfaceViewDimensions() : Int{
+    private fun getSurfaceViewDimensions(): Int {
         return binding.surfaceview.layoutParams.height
     }
 
@@ -139,8 +139,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpFrameObserver() {
         renderer.camera.observe(this) {
-            if (viewModel.counting)
-                viewModel.insertDataSet()
+            viewModel.insertDataSet()
         }
     }
 
@@ -181,7 +180,7 @@ class MainActivity : AppCompatActivity() {
     private fun setUpNextTargetObserver() {
         renderer.reached.observe(this) {
             if (it == true) {
-                viewModel.updateTestCase()
+                viewModel.updateTestCaseEndTime()
             }
         }
     }
@@ -191,12 +190,10 @@ class MainActivity : AppCompatActivity() {
         var flag = true
         viewModel.targetIndex.observe(this) {
             if (it > 0) {
-                Log.d(TAG, "TargetIndex")
                 if (flag)
                     flag = false
                 else {
-                    if (it == MAX_TARGETS + 1) {
-                        showAlert()
+                    if (it > MAX_TARGETS) {
 
                         renderer.deleteAnchor()
                         viewModel.resetTargetIndex()
@@ -220,6 +217,8 @@ class MainActivity : AppCompatActivity() {
     //shows alert if target is reached
     private fun showAlert() {
 
+        Log.d("UserReset", "2: ${viewModel.targetIndex.value}")
+
         if (isAlertDialogOpen) {
             return
         }
@@ -234,6 +233,7 @@ class MainActivity : AppCompatActivity() {
                     viewModel.placeTargetOnNewPosition()
                     viewModel.placeObjectInFocus()
                     renderer.resetReached()
+                    viewModel.updateTestCaseStartTime()
                 }
                 dialogInterface.dismiss()
             }.setOnDismissListener { isAlertDialogOpen = false }

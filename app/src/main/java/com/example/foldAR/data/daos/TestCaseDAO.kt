@@ -19,6 +19,8 @@ interface TestCaseDAO {
     suspend fun getLastTestCase(): TestCase
 
     @Query("UPDATE TESTCASE SET EndTime = :endTime WHERE TestCaseID = :testCaseId")
-    suspend fun updateTestCase(endTime: String, testCaseId: Int)
+    suspend fun updateEndTime(endTime: String, testCaseId: Int)
 
+    @Query("UPDATE TESTCASE SET StartTime = :startTime WHERE TestCaseID = :testCaseId")
+    suspend fun updateStartTime(startTime: String, testCaseId: Int)
 }

@@ -40,10 +40,8 @@ class MainActivityViewModel : ViewModel() {
     private var _dataBaseObjectsSet: MutableLiveData<Boolean> = MutableLiveData(false)
     val dataBaseObjectsSet get() = _dataBaseObjectsSet
 
-    private var _counting: Boolean = false
-    val counting get() = _counting
-
     var testCase = 0
+    private var update = false;
 
     //set false if new ui is loaded
     fun setDatabaseObjectsSet(case: Boolean) {
@@ -81,10 +79,6 @@ class MainActivityViewModel : ViewModel() {
     fun resetTargetIndex() {
         this._targetIndex.value = 0
     }
-
-//    fun setScale(scale: Float) {
-//        _scale.value = scale
-//    }
 
     fun setClickable(b: Boolean) {
         this._clickable.value = b
@@ -139,7 +133,11 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun changeAnchorsPlaneCamera(position: Pair<Float, Float>) =
-        renderer.moveAnchorPlane(position.first + pose!!.tx(), position.second + pose!!.tz(), currentPosition.value!!)
+        renderer.moveAnchorPlane(
+            position.first + pose!!.tx(),
+            position.second + pose!!.tz(),
+            currentPosition.value!!
+        )
 
     fun setPose() {
         renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
@@ -293,7 +291,7 @@ class MainActivityViewModel : ViewModel() {
             val testCase = TestCase(
                 ScenarioID = currentScenario.value!!.ScenarioID,
                 TestCaseName = targetIndex.value!! + 1,
-                StartTime = System.currentTimeMillis().toString(),
+                StartTime = null,
                 EndTime = null
             )
 
@@ -301,20 +299,28 @@ class MainActivityViewModel : ViewModel() {
                 database.insertTestCase(testCase)
 
                 _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
-                _counting = true
             }
         }
     }
 
-
-    fun updateTestCase() {
+    fun updateTestCaseEndTime() {
+        update = false
         val currentTime = System.currentTimeMillis().toString()
         Log.d("SpecificTest", "testing the update")
         this.testCase = targetIndex.value!!
         viewModelScope.launch(Dispatchers.IO) {
-            database.updateTestCase(currentTime, currentTestCase.value!!.TestCaseID)
-            _counting = false
+            database.updateEndTime(currentTime, currentTestCase.value!!.TestCaseID)
             _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
+        }
+    }
+
+    fun updateTestCaseStartTime() {
+
+        val currentTime = System.currentTimeMillis().toString()
+        update = true
+
+        viewModelScope.launch(Dispatchers.IO) {
+            database.updateStartTime(currentTime, currentTestCase.value!!.TestCaseID)
         }
     }
 
@@ -326,29 +332,33 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun insertDataSet() {
-        val camera = renderer.camera.value!!.pose
-        val movingObject = renderer.wrappedAnchors[0].anchor.pose
-        val targetObject = renderer.wrappedAnchors[1].anchor.pose
-        viewModelScope.launch(Dispatchers.IO) {
-            database.insertDataSet(
-                DataSet(
-                    TestCaseID = currentTestCase.value!!.TestCaseID,
-                    Time = System.currentTimeMillis().toString(),
-                    CameraPositionX = camera.tx(),
-                    CameraPositionY = camera.ty(),
-                    CameraPositionZ = camera.tz(),
-                    CameraRoatationX = camera.qx(),
-                    CameraRoatationY = camera.ty(),
-                    CameraRoatationZ = camera.qz(),
-                    CameraRoatationW = camera.qw(),
-                    Location_ManipulatedObjectX = movingObject.tx(),
-                    Location_ManipulatedObjectY = movingObject.ty(),
-                    Location_ManipulatedObjectZ = movingObject.tz(),
-                    Location_TargetObjectX =targetObject.tx(),
-                    Location_TargetObjectY =targetObject.ty(),
-                    Location_TargetObjectZ =targetObject.tz(),
+        Log.d("UpdatingTest", "3: $update")
+
+        if (update) {
+            val camera = renderer.camera.value!!.pose
+            val movingObject = renderer.wrappedAnchors[0].anchor.pose
+            val targetObject = renderer.wrappedAnchors[1].anchor.pose
+            viewModelScope.launch(Dispatchers.IO) {
+                database.insertDataSet(
+                    DataSet(
+                        TestCaseID = currentTestCase.value!!.TestCaseID,
+                        Time = System.currentTimeMillis().toString(),
+                        CameraPositionX = camera.tx(),
+                        CameraPositionY = camera.ty(),
+                        CameraPositionZ = camera.tz(),
+                        CameraRoatationX = camera.qx(),
+                        CameraRoatationY = camera.ty(),
+                        CameraRoatationZ = camera.qz(),
+                        CameraRoatationW = camera.qw(),
+                        Location_ManipulatedObjectX = movingObject.tx(),
+                        Location_ManipulatedObjectY = movingObject.ty(),
+                        Location_ManipulatedObjectZ = movingObject.tz(),
+                        Location_TargetObjectX = targetObject.tx(),
+                        Location_TargetObjectY = targetObject.ty(),
+                        Location_TargetObjectZ = targetObject.tz(),
+                    )
                 )
-            )
+            }
         }
     }
 }
