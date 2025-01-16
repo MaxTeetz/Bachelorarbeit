@@ -41,6 +41,7 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 
+@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivityTest"
