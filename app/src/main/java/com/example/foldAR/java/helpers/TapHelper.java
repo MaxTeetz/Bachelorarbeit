@@ -1,16 +1,14 @@
 package com.example.foldAR.java.helpers;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 
-import androidx.constraintlayout.widget.ConstraintSet;
-import androidx.lifecycle.ViewModelProvider;
+import androidx.annotation.NonNull;
 
-import com.example.foldAR.kotlin.mainActivity.MainActivity;
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -23,10 +21,10 @@ import java.util.concurrent.BlockingQueue;
 public final class TapHelper implements OnTouchListener {
 
     private final MainActivityViewModel viewModel;
-    private Long time = 0L;
     private int previousCount = 0;
     private Float currentMain = 0f;
 
+    private int dimension;
 
     //simple check to see if placement or moving action
     Boolean placement = true; //Todo for not lazy person
@@ -40,14 +38,16 @@ public final class TapHelper implements OnTouchListener {
    *
    * @param context the application's context.
    */
-  public TapHelper(Context context, MainActivityViewModel viewModel) {
+  public TapHelper(Context context, MainActivityViewModel viewModel, int dimensions) {
       this.viewModel = viewModel;
+      this.dimension = dimensions;
+
     gestureDetector =
         new GestureDetector(
             context,
             new GestureDetector.SimpleOnGestureListener() {
               @Override
-              public boolean onSingleTapUp(MotionEvent e) {
+              public boolean onSingleTapUp(@NonNull MotionEvent e) {
                 // Queue tap if there is space. Tap is lost if queue is full.
                   if(placement){ //Todo add center of screen here as a def value if camera wise isn´t working out
                       placement = false;
@@ -59,7 +59,7 @@ public final class TapHelper implements OnTouchListener {
               }
 
               @Override
-              public boolean onDown(MotionEvent e) {
+              public boolean onDown(@NonNull MotionEvent e) {
                 return true;
               }
             });
@@ -74,11 +74,11 @@ public final class TapHelper implements OnTouchListener {
     return queuedSingleTaps.poll();
   }
 
+  @SuppressLint("ClickableViewAccessibility")
   @Override
   public boolean onTouch(View view, MotionEvent motionEvent) {
 
       if (motionEvent.getPointerCount() != previousCount) {
-          time = System.currentTimeMillis();
           previousCount = motionEvent.getPointerCount();
           if(motionEvent.getPointerCount() == 2) {
               currentMain = motionEvent.getX(0);
@@ -89,13 +89,12 @@ public final class TapHelper implements OnTouchListener {
       if(!placement){
           if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
               viewModel.setInitialY(motionEvent.getY());
-              time = System.currentTimeMillis();
               viewModel.setPose();
           }
           if(previousCount == 2){
               viewModel.rotateObject(motionEvent, currentMain);
           }
-          if (motionEvent.getAction() == MotionEvent.ACTION_MOVE && previousCount == 1 && System.currentTimeMillis() - time > 200) {
+          if (motionEvent.getAction() == MotionEvent.ACTION_MOVE && previousCount == 1 && motionEvent.getY() < dimension) {
               viewModel.setTouchEvent(motionEvent);
           }
       }

@@ -40,10 +40,8 @@ class MainActivityViewModel : ViewModel() {
     private var _dataBaseObjectsSet: MutableLiveData<Boolean> = MutableLiveData(false)
     val dataBaseObjectsSet get() = _dataBaseObjectsSet
 
-    private var _counting: Boolean = false
-    val counting get() = _counting
-
     var testCase = 0
+    private var update = false;
 
     //set false if new ui is loaded
     fun setDatabaseObjectsSet(case: Boolean) {
@@ -60,7 +58,7 @@ class MainActivityViewModel : ViewModel() {
     val currentPosition get() = _currentPosition
 
     //map scaling
-    private var _scale: MutableLiveData<Float> = MutableLiveData<Float>(Constants.scaleFactor)
+    private var _scale: MutableLiveData<Float> = MutableLiveData<Float>(Constants.SCALE_FACTOR)
     val scale get() = _scale
 
     private var _touchEvent: MutableLiveData<MotionEvent> = MutableLiveData()
@@ -80,10 +78,6 @@ class MainActivityViewModel : ViewModel() {
 
     fun resetTargetIndex() {
         this._targetIndex.value = 0
-    }
-
-    fun setScale(scale: Float) {
-        _scale.value = scale
     }
 
     fun setClickable(b: Boolean) {
@@ -121,7 +115,7 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun setScaleFactor(view: View) {
-        this.viewScale = (Constants.bitmapSize.toFloat() / view.height.toFloat())
+        this.viewScale = (Constants.BITMAP_SIZE.toFloat() / view.height.toFloat())
     }
 
     fun setInitialY(y: Float) {
@@ -139,7 +133,11 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun changeAnchorsPlaneCamera(position: Pair<Float, Float>) =
-        renderer.moveAnchorPlane(position.first, position.second, currentPosition.value!!)
+        renderer.moveAnchorPlane(
+            position.first + pose!!.tx(),
+            position.second + pose!!.tz(),
+            currentPosition.value!!
+        )
 
     fun setPose() {
         renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
@@ -177,7 +175,7 @@ class MainActivityViewModel : ViewModel() {
     //places object around the user; gets data from constant values
     fun placeTargetOnNewPosition() {
 
-        if (targetIndex.value!! <= Constants.maxTargets) {
+        if (targetIndex.value!! <= Constants.MAX_TARGETS) {
             val rotation = renderer.refreshAngle()
             val camPos = renderer.camera.value!!.pose
 
@@ -248,7 +246,7 @@ class MainActivityViewModel : ViewModel() {
                 if (renderer.wrappedAnchors.size != 2)
                     _dataBaseObjectsSet.value = true
             } else {
-                if (currentTestCase.value!!.TestCaseName == Constants.maxTargets) {
+                if (currentTestCase.value!!.TestCaseName == Constants.MAX_TARGETS) {
                     if (currentScenario.value!!.ScenarioName == 2) {
                         viewModelScope.launch(Dispatchers.IO) {
                             setUserDone()
@@ -293,7 +291,7 @@ class MainActivityViewModel : ViewModel() {
             val testCase = TestCase(
                 ScenarioID = currentScenario.value!!.ScenarioID,
                 TestCaseName = targetIndex.value!! + 1,
-                StartTime = System.currentTimeMillis().toString(),
+                StartTime = null,
                 EndTime = null
             )
 
@@ -301,20 +299,28 @@ class MainActivityViewModel : ViewModel() {
                 database.insertTestCase(testCase)
 
                 _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
-                _counting = true
             }
         }
     }
 
-
-    fun updateTestCase() {
+    fun updateTestCaseEndTime() {
+        update = false
         val currentTime = System.currentTimeMillis().toString()
         Log.d("SpecificTest", "testing the update")
         this.testCase = targetIndex.value!!
         viewModelScope.launch(Dispatchers.IO) {
-            database.updateTestCase(currentTime, currentTestCase.value!!.TestCaseID)
-            _counting = false
+            database.updateEndTime(currentTime, currentTestCase.value!!.TestCaseID)
             _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
+        }
+    }
+
+    fun updateTestCaseStartTime() {
+
+        val currentTime = System.currentTimeMillis().toString()
+        update = true
+
+        viewModelScope.launch(Dispatchers.IO) {
+            database.updateStartTime(currentTime, currentTestCase.value!!.TestCaseID)
         }
     }
 
@@ -326,29 +332,33 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun insertDataSet() {
-        val camera = renderer.camera.value!!.pose
-        val movingObject = renderer.wrappedAnchors[0].anchor.pose
-        val targetObject = renderer.wrappedAnchors[1].anchor.pose
-        viewModelScope.launch(Dispatchers.IO) {
-            database.insertDataSet(
-                DataSet(
-                    TestCaseID = currentTestCase.value!!.TestCaseID,
-                    Time = System.currentTimeMillis().toString(),
-                    CameraPositionX = camera.tx(),
-                    CameraPositionY = camera.ty(),
-                    CameraPositionZ = camera.tz(),
-                    CameraRoatationX = camera.qx(),
-                    CameraRoatationY = camera.ty(),
-                    CameraRoatationZ = camera.qz(),
-                    CameraRoatationW = camera.qw(),
-                    Location_ManipulatedObjectX = movingObject.tx(),
-                    Location_ManipulatedObjectY = movingObject.ty(),
-                    Location_ManipulatedObjectZ = movingObject.tz(),
-                    Location_TargetObjectX =targetObject.tx(),
-                    Location_TargetObjectY =targetObject.ty(),
-                    Location_TargetObjectZ =targetObject.tz(),
+        Log.d("UpdatingTest", "3: $update")
+
+        if (update) {
+            val camera = renderer.camera.value!!.pose
+            val movingObject = renderer.wrappedAnchors[0].anchor.pose
+            val targetObject = renderer.wrappedAnchors[1].anchor.pose
+            viewModelScope.launch(Dispatchers.IO) {
+                database.insertDataSet(
+                    DataSet(
+                        TestCaseID = currentTestCase.value!!.TestCaseID,
+                        Time = System.currentTimeMillis().toString(),
+                        CameraPositionX = camera.tx(),
+                        CameraPositionY = camera.ty(),
+                        CameraPositionZ = camera.tz(),
+                        CameraRoatationX = camera.qx(),
+                        CameraRoatationY = camera.ty(),
+                        CameraRoatationZ = camera.qz(),
+                        CameraRoatationW = camera.qw(),
+                        Location_ManipulatedObjectX = movingObject.tx(),
+                        Location_ManipulatedObjectY = movingObject.ty(),
+                        Location_ManipulatedObjectZ = movingObject.tz(),
+                        Location_TargetObjectX = targetObject.tx(),
+                        Location_TargetObjectY = targetObject.ty(),
+                        Location_TargetObjectZ = targetObject.tz(),
+                    )
                 )
-            )
+            }
         }
     }
 }

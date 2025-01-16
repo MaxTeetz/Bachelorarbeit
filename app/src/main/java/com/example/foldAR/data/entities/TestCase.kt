@@ -17,6 +17,6 @@ data class TestCase(
     @PrimaryKey(autoGenerate = true) val TestCaseID: Int = 0,
     val ScenarioID: Int,
     val TestCaseName: Int,
-    val StartTime: String,
+    val StartTime: String?,
     val EndTime: String?
 )

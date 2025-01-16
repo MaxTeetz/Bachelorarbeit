@@ -70,8 +70,12 @@ class DatabaseViewModel(
         usersDAO.updateUser(userId)
     }
 
-    suspend fun updateTestCase(currentTime: String, testCaseId: Int) {
-        testCaseDAO.updateTestCase(currentTime, testCaseId)
+    suspend fun updateEndTime(currentTime: String, testCaseId: Int) {
+        testCaseDAO.updateEndTime(currentTime, testCaseId)
+    }
+
+    suspend fun updateStartTime(currentTime: String, testCaseId: Int){
+        testCaseDAO.updateStartTime(currentTime, testCaseId)
     }
 }
 
