@@ -14,9 +14,6 @@ interface DataSetsDAO {
     @Delete
     suspend fun deleteDataSets(dataSet: DataSet)
 
-    @Query("SELECT * FROM DataSet WHERE TestCaseID = :testCaseId")
-    suspend fun getDataSetsByTestCaseId(testCaseId: Int): List<DataSet>
-
     @Query("DELETE FROM DataSet WHERE TestCaseID = :testCaseId")
     suspend fun deleteDataSetsForTestCase(testCaseId: Int)
 }

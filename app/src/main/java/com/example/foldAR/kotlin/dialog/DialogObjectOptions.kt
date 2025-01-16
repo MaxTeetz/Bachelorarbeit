@@ -77,16 +77,19 @@ class DialogObjectOptions : DialogFragment() {
         if (viewModelMainActivity.renderer.wrappedAnchors.isEmpty()) {
             makeToast("Erst Objekt platzieren!")
         } else {
-            if (viewModelMainActivity.currentUser.value != null)
+            if (viewModelMainActivity.currentUser.value != null) {
+                viewModelMainActivity.updateTestCaseStartTime()
                 startUI()
-            else {
+            } else {
+
                 lifecycleScope.launch(Dispatchers.Main) {
 
                     if (name.isEmpty())
                         makeToast("Erst Namen eingeben")
-                    else {
+                    else { //TODO if user is created after another one finishes a dialog appears with endTarget as Text
                         viewModelMainActivity.currentTestCase.observe(viewLifecycleOwner) { testcase ->
                             if (testcase != null) {
+                                viewModelMainActivity.updateTestCaseStartTime()
                                 startUI()
                                 viewModelMainActivity.currentTestCase.removeObservers(
                                     viewLifecycleOwner

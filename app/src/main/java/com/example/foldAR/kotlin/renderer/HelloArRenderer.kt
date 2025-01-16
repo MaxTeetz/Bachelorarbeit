@@ -112,7 +112,6 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     lateinit var secondAnchor: WrappedAnchor
 
     val wrappedAnchors = Collections.synchronizedList(mutableListOf<WrappedAnchor>())
-    val wrappedAnchorsLiveData = MutableLiveData<List<WrappedAnchor>>()
 
     private var _reached: MutableLiveData<Boolean> = MutableLiveData(false)
     val reached get() = _reached
@@ -488,7 +487,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             }
         }
 
-        if (firstHitResult != null && wrappedAnchors.size <= Constants.objectsMaxSize) {
+        if (firstHitResult != null && wrappedAnchors.size <= Constants.OBJECTS_MAX_SIZE) {
             // Cap the number of objects created. This avoids overloading both the
             // rendering system and ARCore.
             // Adding an Anchor tells ARCore that it should track this position in
@@ -525,21 +524,31 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
             wrappedAnchors[position].anchor.detach() //Todo error if no valid session camera obstructed or something like that
             //add to list
-            val newAnchor =
-                WrappedAnchor(session!!.createAnchor(newPose), wrappedAnchors[position].trackable)
 
-            wrappedAnchors[position] = newAnchor
+            try {
+                session?.let {
+                    val newAnchor =
+                        WrappedAnchor(
+                            session!!.createAnchor(newPose),
+                            wrappedAnchors[position].trackable
+                        )
 
-            if (wrappedAnchors.size == 2)
-                checkIfInTargetRange()
-            Log.d(
-                "NewPosObject",
-                "Anker:   ${wrappedAnchors[0].anchor.pose.tx()}   ${wrappedAnchors[0].anchor.pose.tz()}"
-            )
-            Log.d(
-                "NewPosObject",
-                "Kamera:  ${camera.value!!.pose.tx()}   ${camera.value!!.pose.tz()}"
-            )
+                    wrappedAnchors[position] = newAnchor
+
+                    if (wrappedAnchors.size == 2)
+                        checkIfInTargetRange()
+                    Log.d(
+                        "NewPosObject",
+                        "Anker:   ${wrappedAnchors[0].anchor.pose.tx()}   ${wrappedAnchors[0].anchor.pose.tz()}"
+                    )
+                    Log.d(
+                        "NewPosObject",
+                        "Kamera:  ${camera.value!!.pose.tx()}   ${camera.value!!.pose.tz()}"
+                    )
+                } ?: Log.e("MoveAnchor", "Session is null or invalid")
+            } catch (e: Exception) {
+                Log.e("MoveAnchor", "Failed to create new Anchor", e)
+            }
         }
     }
 

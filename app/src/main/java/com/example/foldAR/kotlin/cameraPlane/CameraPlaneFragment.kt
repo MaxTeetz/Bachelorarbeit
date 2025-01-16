@@ -4,13 +4,11 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MotionEvent
-import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import com.example.foldAR.kotlin.constants.Constants
 import com.example.foldAR.kotlin.helloar.databinding.FragmentCameraPlaneBinding
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -29,9 +27,10 @@ class CameraPlaneFragment : Fragment() {
     private val coroutine1 = Job()
     private val coroutineScope1 = CoroutineScope(coroutine1 + Dispatchers.Main)
 
-    private var scaleFactor = Constants.scaleFactor
-    private var time: Long = 0
+//    private var scaleFactor = Constants.scaleFactor
     private var previousCount = 0
+
+    private lateinit var startingPoint: Pair<Float, Float>
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -81,45 +80,45 @@ class CameraPlaneFragment : Fragment() {
 
     }
 
-    private inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-        override fun onScale(detector: ScaleGestureDetector): Boolean {
-            scaleFactor *= detector.scaleFactor
-            scaleFactor = scaleFactor.coerceIn(1.0f, 5.0f)
-            viewModelActivity.setScale(scaleFactor)
-            return true
-        }
-
-        override fun onScaleEnd(detector: ScaleGestureDetector) {
-            super.onScaleEnd(detector)
-            //Todo detach and stuff ig
-        }
-    }
+//    private inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+//        override fun onScale(detector: ScaleGestureDetector): Boolean {
+//            scaleFactor *= detector.scaleFactor
+//            scaleFactor = scaleFactor.coerceIn(1.0f, 5.0f)
+//            viewModelActivity.setScale(scaleFactor)
+//            return true
+//        }
+//
+//        override fun onScaleEnd(detector: ScaleGestureDetector) {
+//            super.onScaleEnd(detector)
+//            //Todo detach and stuff ig
+//        }
+//    }
 
     @SuppressLint("ClickableViewAccessibility", "SuspiciousIndentation")
     private fun moveObject() {
-        val scaleGestureDetector = ScaleGestureDetector(requireContext(), ScaleListener())
+//        val scaleGestureDetector = ScaleGestureDetector(requireContext(), ScaleListener())
 
         binding.imageMoveObjectPlane.setOnTouchListener { view, event ->
             viewModelActivity.renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
 
-                scaleGestureDetector.onTouchEvent(event)
+                //scaleGestureDetector.onTouchEvent(event)
 
                 if (event.pointerCount != previousCount) {
-                    time = System.currentTimeMillis()
                     previousCount = event.pointerCount
                 }
 
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
-                        time = System.currentTimeMillis()
+                        this.startingPoint = Pair(event.x, event.y)
+                        viewModelActivity.setPose()
                     }
 
                     MotionEvent.ACTION_MOVE ->
-                        if (previousCount == 1 && System.currentTimeMillis() - time > 200) {
-                            if(event.y >= 0)
-                            viewModelActivity.changeAnchorsPlaneCamera(
-                                viewModel.moveAnchors(event, binding.imageMoveObjectPlane)
-                            )
+                        if (previousCount == 1) {
+                            if (event.y >= 0)
+                                viewModelActivity.changeAnchorsPlaneCamera(
+                                    viewModel.moveAnchors(this.startingPoint, event, binding.imageMoveObjectPlane)
+                                )
 
                         }
                 }

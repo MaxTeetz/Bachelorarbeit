@@ -21,7 +21,7 @@ import com.example.foldAR.java.helpers.InstantPlacementSettings
 import com.example.foldAR.java.helpers.SnackbarHelper
 import com.example.foldAR.java.helpers.TapHelper
 import com.example.foldAR.java.samplerender.SampleRender
-import com.example.foldAR.kotlin.constants.Constants.maxTargets
+import com.example.foldAR.kotlin.constants.Constants.MAX_TARGETS
 import com.example.foldAR.kotlin.dialog.DialogObjectOptions
 import com.example.foldAR.kotlin.helloar.R
 import com.example.foldAR.kotlin.helloar.databinding.ActivityMainBinding
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
 
         val factory = DatabaseViewModelFactory(usersDAO, scenariosDAO, testCaseDAO, dataSetsDAO)
 
-        databaseViewModel = ViewModelProvider(this, factory).get(DatabaseViewModel::class.java)
+        databaseViewModel = ViewModelProvider(this, factory)[DatabaseViewModel::class.java]
 
         setContentView(binding.root)
         setupBinding()
@@ -96,9 +96,13 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("ClickableViewAccessibility")
     private fun setupBinding() {
         surfaceView = findViewById(R.id.surfaceview)
-        tapHelper = TapHelper(this, viewModel).also {
+        tapHelper = TapHelper(this, viewModel, getSurfaceViewDimensions()).also {
             surfaceView.setOnTouchListener(it)
         }
+    }
+
+    private fun getSurfaceViewDimensions(): Int {
+        return binding.surfaceview.layoutParams.height
     }
 
     private fun setUpDatabase() {
@@ -135,8 +139,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpFrameObserver() {
         renderer.camera.observe(this) {
-            if (viewModel.counting)
-                viewModel.insertDataSet()
+            viewModel.insertDataSet()
         }
     }
 
@@ -177,7 +180,7 @@ class MainActivity : AppCompatActivity() {
     private fun setUpNextTargetObserver() {
         renderer.reached.observe(this) {
             if (it == true) {
-                viewModel.updateTestCase()
+                viewModel.updateTestCaseEndTime()
             }
         }
     }
@@ -187,12 +190,10 @@ class MainActivity : AppCompatActivity() {
         var flag = true
         viewModel.targetIndex.observe(this) {
             if (it > 0) {
-                Log.d(TAG, "TargetIndex")
                 if (flag)
                     flag = false
                 else {
-                    if (it == maxTargets + 1) {
-                        showAlert()
+                    if (it > MAX_TARGETS) {
 
                         renderer.deleteAnchor()
                         viewModel.resetTargetIndex()
@@ -216,6 +217,8 @@ class MainActivity : AppCompatActivity() {
     //shows alert if target is reached
     private fun showAlert() {
 
+        Log.d("UserReset", "2: ${viewModel.targetIndex.value}")
+
         if (isAlertDialogOpen) {
             return
         }
@@ -230,6 +233,7 @@ class MainActivity : AppCompatActivity() {
                     viewModel.placeTargetOnNewPosition()
                     viewModel.placeObjectInFocus()
                     renderer.resetReached()
+                    viewModel.updateTestCaseStartTime()
                 }
                 dialogInterface.dismiss()
             }.setOnDismissListener { isAlertDialogOpen = false }
