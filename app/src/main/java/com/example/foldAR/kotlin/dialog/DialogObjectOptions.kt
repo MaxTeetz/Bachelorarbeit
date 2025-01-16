@@ -112,7 +112,6 @@ class DialogObjectOptions : DialogFragment() {
     }
 
     private fun showAlert() {
-        activity.selectLayout()
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(android.R.string.dialog_alert_title))

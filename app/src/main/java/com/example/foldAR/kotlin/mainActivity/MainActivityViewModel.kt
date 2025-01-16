@@ -224,6 +224,7 @@ class MainActivityViewModel : ViewModel() {
             } else {
                 viewModelScope.launch(Dispatchers.IO) {
                     _currentScenario.postValue(database.getLastScenarioByUserId(currentUser.value!!.UserID))
+                    _finished.postValue(Finished.SCENARIO)
                 }
             }
         }
@@ -263,7 +264,6 @@ class MainActivityViewModel : ViewModel() {
                         viewModelScope.launch(Dispatchers.IO) {
                             createNewScenario()
                             _dataBaseObjectsSet.postValue(true)
-                            _finished.postValue(Finished.SCENARIO)
                         }
                     }
                 } else {
@@ -295,6 +295,7 @@ class MainActivityViewModel : ViewModel() {
             )
             database.insertScenario(scenario)
             _currentScenario.postValue(database.getLastScenarioByUserId(currentUser.value!!.UserID))
+            _finished.postValue(Finished.SCENARIO)
         }
     }
 

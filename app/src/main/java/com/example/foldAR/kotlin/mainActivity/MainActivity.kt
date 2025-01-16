@@ -132,12 +132,10 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.currentScenario.observe(this) {
             viewModel.checkCurrentScenario()
-            Log.d(TAG, "Scenario: $it")
         }
 
         viewModel.currentTestCase.observe(this) {
             viewModel.checkCurrentTestCase()
-            Log.d(TAG, "TestCase: $it")
         }
     }
 
@@ -192,23 +190,23 @@ class MainActivity : AppCompatActivity() {
     //next scenario i.e. folded or unfolded
     private fun setUpNextRoundObserver() {
         viewModel.finished.observe(this) {
-            Log.d("TargetIndexMain", "1: $it")
             if (it == Finished.SCENARIO) {
-                Log.d("TargetIndexMain", "2: $it")
                 renderer.deleteAnchor()
                 viewModel.resetTargetIndex()
                 renderer.resetReached()
+                selectLayout()
 
                 Toast.makeText(
                     this,
-                    "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
+                    "Scenario ${viewModel.currentScenario.value!!.ScenarioCase}. Platziere ein neues Objekt, um fortfahren zu können!",
                     Toast.LENGTH_LONG
                 ).show()
 
                 viewModel.setClickable(true)
                 tapHelper.onResume()
 
-            } else
+            }
+            if (it == Finished.TEST)
                 nextRoundAlert()
         }
     }
@@ -353,7 +351,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun selectLayout() {
+    private fun selectLayout() {
         val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)
