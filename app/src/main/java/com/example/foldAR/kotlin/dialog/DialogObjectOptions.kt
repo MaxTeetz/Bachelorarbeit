@@ -11,7 +11,9 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.foldAR.kotlin.helloar.databinding.DialogObjectOptionsBinding
+import com.example.foldAR.kotlin.mainActivity.MainActivity
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -23,6 +25,7 @@ class DialogObjectOptions : DialogFragment() {
         }
     }
 
+    private lateinit var activity: MainActivity
 
     private var _binding: DialogObjectOptionsBinding? = null
     private val binding get() = _binding!!
@@ -56,6 +59,8 @@ class DialogObjectOptions : DialogFragment() {
         savedInstanceState: Bundle?,
     ): View {
         _binding = DialogObjectOptionsBinding.inflate(inflater, container, false)
+        activity = requireActivity() as MainActivity
+
         return binding.root
     }
 
@@ -78,8 +83,7 @@ class DialogObjectOptions : DialogFragment() {
             makeToast("Erst Objekt platzieren!")
         } else {
             if (viewModelMainActivity.currentUser.value != null) {
-                viewModelMainActivity.updateTestCaseStartTime()
-                startUI()
+                showAlert()
             } else {
 
                 lifecycleScope.launch(Dispatchers.Main) {
@@ -89,8 +93,7 @@ class DialogObjectOptions : DialogFragment() {
                     else { //TODO if user is created after another one finishes a dialog appears with endTarget as Text
                         viewModelMainActivity.currentTestCase.observe(viewLifecycleOwner) { testcase ->
                             if (testcase != null) {
-                                viewModelMainActivity.updateTestCaseStartTime()
-                                startUI()
+                                showAlert()
                                 viewModelMainActivity.currentTestCase.removeObservers(
                                     viewLifecycleOwner
                                 )
@@ -103,9 +106,26 @@ class DialogObjectOptions : DialogFragment() {
         }
     }
 
+
     private fun makeToast(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
+
+    private fun showAlert() {
+        activity.selectLayout()
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(android.R.string.dialog_alert_title))
+            .setMessage("Die nächste Runde ist Scenario ${viewModelMainActivity.currentScenario.value!!.ScenarioCase}")
+            .setCancelable(false)
+            .setPositiveButton("Nächste Runde") { dialogInterface, _ ->
+                dialogInterface.dismiss()
+                viewModelMainActivity.updateTestCaseStartTime()
+                startUI()
+            }
+            .show()
+    }
+
 
     private fun startUI() {
 

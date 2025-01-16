@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.foldAR.kotlin.constants.Scenarios
 
 @Entity(
     foreignKeys = [ForeignKey(
@@ -16,5 +17,6 @@ import androidx.room.PrimaryKey
 data class Scenario(
     @PrimaryKey(autoGenerate = true) val ScenarioID: Int = 0,
     val UserID: Int,
-    val ScenarioName: Int
+    val ScenarioName: Int,
+    val ScenarioCase: Scenarios
 )

@@ -100,3 +100,8 @@ DialogOptions
 
 Kein Nutzer -> Check ob Name und Objekt -> Nutzer anlegen und dann UI starten
 Nutzer -> Check ob Objekt -> UI starten
+
+Changes in      Trigger     Changes
+User            User        Scenario
+Scenario        Scenario    TestCase
+TestCase        TestCase    User/Scenario/TestCase

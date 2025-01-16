@@ -12,7 +12,10 @@ import com.example.foldAR.data.entities.Scenario
 import com.example.foldAR.data.entities.TestCase
 import com.example.foldAR.data.entities.User
 import com.example.foldAR.kotlin.constants.Constants
+import com.example.foldAR.kotlin.constants.Finished
 import com.example.foldAR.kotlin.constants.ObjectCoords
+import com.example.foldAR.kotlin.constants.ScenarioOrder
+import com.example.foldAR.kotlin.constants.Scenarios
 import com.example.foldAR.kotlin.renderer.HelloArRenderer
 import com.google.ar.core.Pose
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +45,9 @@ class MainActivityViewModel : ViewModel() {
 
     var testCase = 0
     private var update = false;
+
+    private var _finished: MutableLiveData<Finished> = MutableLiveData(Finished.NOTFINISHED)
+    val finished get() = _finished
 
     //set false if new ui is loaded
     fun setDatabaseObjectsSet(case: Boolean) {
@@ -213,6 +219,7 @@ class MainActivityViewModel : ViewModel() {
                 _currentUser.value = null
                 _currentScenario.value = null
                 _currentTestCase.value = null
+                renderer.resetReached()
                 resetTargetIndex()
             } else {
                 viewModelScope.launch(Dispatchers.IO) {
@@ -241,6 +248,7 @@ class MainActivityViewModel : ViewModel() {
             if (currentTestCase.value!!.EndTime == null) {
                 database.deleteDataSet(currentTestCase.value!!.TestCaseID)
                 _targetIndex.value = currentTestCase.value!!.TestCaseName
+                Log.d("TargetIndexMain", "3: ${targetIndex.value}")
 
                 //only true in case that its after app start and not in between rounds
                 if (renderer.wrappedAnchors.size != 2)
@@ -255,10 +263,12 @@ class MainActivityViewModel : ViewModel() {
                         viewModelScope.launch(Dispatchers.IO) {
                             createNewScenario()
                             _dataBaseObjectsSet.postValue(true)
+                            _finished.postValue(Finished.SCENARIO)
                         }
                     }
                 } else {
                     createTestCase()
+                    _finished.postValue(Finished.TEST)
                 }
             }
         }
@@ -268,11 +278,20 @@ class MainActivityViewModel : ViewModel() {
         Log.d("TestingDatabase", "scenario")
 
         if (currentUser.value != null) {
+            val id = currentUser.value!!.UserID % 6
+            val triple = ScenarioOrder().orderList[id]
+
             val scenarioName: Int = currentScenario.value?.ScenarioName?.plus(1) ?: 0
 
             val scenario = Scenario(
                 UserID = currentUser.value!!.UserID,
-                ScenarioName = scenarioName
+                ScenarioName = scenarioName,
+                ScenarioCase = when (scenarioName) {
+                    0 -> triple.first
+                    1 -> triple.second
+                    2 -> triple.third
+                    else -> Scenarios.NOVALIDSCENARIO
+                }
             )
             database.insertScenario(scenario)
             _currentScenario.postValue(database.getLastScenarioByUserId(currentUser.value!!.UserID))
@@ -297,7 +316,6 @@ class MainActivityViewModel : ViewModel() {
 
             viewModelScope.launch(Dispatchers.IO) {
                 database.insertTestCase(testCase)
-
                 _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
             }
         }
@@ -321,6 +339,7 @@ class MainActivityViewModel : ViewModel() {
 
         viewModelScope.launch(Dispatchers.IO) {
             database.updateStartTime(currentTime, currentTestCase.value!!.TestCaseID)
+            _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
         }
     }
 

@@ -3,12 +3,15 @@ package com.example.foldAR.kotlin.mainActivity
 import android.annotation.SuppressLint
 import android.opengl.GLSurfaceView
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.ViewTreeObserver
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -21,7 +24,8 @@ import com.example.foldAR.java.helpers.InstantPlacementSettings
 import com.example.foldAR.java.helpers.SnackbarHelper
 import com.example.foldAR.java.helpers.TapHelper
 import com.example.foldAR.java.samplerender.SampleRender
-import com.example.foldAR.kotlin.constants.Constants.MAX_TARGETS
+import com.example.foldAR.kotlin.constants.Finished
+import com.example.foldAR.kotlin.constants.Scenarios
 import com.example.foldAR.kotlin.dialog.DialogObjectOptions
 import com.example.foldAR.kotlin.helloar.R
 import com.example.foldAR.kotlin.helloar.databinding.ActivityMainBinding
@@ -187,35 +191,30 @@ class MainActivity : AppCompatActivity() {
 
     //next scenario i.e. folded or unfolded
     private fun setUpNextRoundObserver() {
-        var flag = true
-        viewModel.targetIndex.observe(this) {
-            if (it > 0) {
-                if (flag)
-                    flag = false
-                else {
-                    if (it > MAX_TARGETS) {
+        viewModel.finished.observe(this) {
+            Log.d("TargetIndexMain", "1: $it")
+            if (it == Finished.SCENARIO) {
+                Log.d("TargetIndexMain", "2: $it")
+                renderer.deleteAnchor()
+                viewModel.resetTargetIndex()
+                renderer.resetReached()
 
-                        renderer.deleteAnchor()
-                        viewModel.resetTargetIndex()
+                Toast.makeText(
+                    this,
+                    "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
+                    Toast.LENGTH_LONG
+                ).show()
 
-                        Toast.makeText(
-                            this,
-                            "Scenario abgeschlossen. Platziere ein neues Objekt, um fortfahren zu können!",
-                            Toast.LENGTH_LONG
-                        ).show()
+                viewModel.setClickable(true)
+                tapHelper.onResume()
 
-                        viewModel.setClickable(true)
-                        tapHelper.onResume()
-
-                    } else
-                        showAlert()
-                }
-            }
+            } else
+                nextRoundAlert()
         }
     }
 
     //shows alert if target is reached
-    private fun showAlert() {
+    private fun nextRoundAlert() {
 
         Log.d("UserReset", "2: ${viewModel.targetIndex.value}")
 
@@ -349,18 +348,34 @@ class MainActivity : AppCompatActivity() {
     //change button outcome
     private fun setUpClickableObserver() {
         viewModel.clickable.observe(this) {
-            /*(binding.fragmentContainer.parent as ViewGroup).removeView(binding.fragmentContainer)
-            val layoutParams = binding.surfaceview.layoutParams as ConstraintLayout.LayoutParams
-            layoutParams.height = ConstraintLayout.LayoutParams.MATCH_PARENT
-            layoutParams.width = ConstraintLayout.LayoutParams.MATCH_PARENT
-            binding.surfaceview.layoutParams = layoutParams
-
-            binding.surfaceview.requestLayout()*/
 
             binding.settingsButton.isClickable = it
         }
     }
 
+    fun selectLayout() {
+        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val height = displayMetrics.heightPixels
+
+        viewModel.currentScenario.value?.let { scenario ->
+            if (scenario.ScenarioCase == Scenarios.STATEOFTHEART)
+                setFoldARLayout(height)
+            else
+                setFoldARLayout(height / 2)
+        }
+    }
+
+    private fun setFoldARLayout(height: Int) {
+
+        val layoutParams = binding.surfaceview.layoutParams as ConstraintLayout.LayoutParams
+        layoutParams.height = height
+        layoutParams.width = ConstraintLayout.LayoutParams.MATCH_PARENT
+        binding.surfaceview.layoutParams = layoutParams
+
+        binding.surfaceview.requestLayout()
+    }
 
     override fun onResume() {
         super.onResume()
