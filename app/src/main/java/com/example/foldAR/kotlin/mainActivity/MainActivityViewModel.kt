@@ -175,12 +175,13 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun createTarget() {
+        Log.d("TargetSetUp", "1")
         renderer.wrappedAnchors.add(renderer.secondAnchor)
     }
 
     //places object around the user; gets data from constant values
     fun placeTargetOnNewPosition() {
-
+        Log.d("TargetSetUp", "2")
         if (targetIndex.value!! <= Constants.MAX_TARGETS) {
             val rotation = renderer.refreshAngle()
             val camPos = renderer.camera.value!!.pose
@@ -214,7 +215,7 @@ class MainActivityViewModel : ViewModel() {
             _dataBaseObjectsSet.value = true
         } else {
             if (currentUser.value!!.Done) {
-                Log.d("DeleteUserTest", "OK")
+                Log.d("TargetSetUp", "5")
                 renderer.deleteAnchor()
                 _currentUser.value = null
                 _currentScenario.value = null
@@ -224,7 +225,6 @@ class MainActivityViewModel : ViewModel() {
             } else {
                 viewModelScope.launch(Dispatchers.IO) {
                     _currentScenario.postValue(database.getLastScenarioByUserId(currentUser.value!!.UserID))
-                    _finished.postValue(Finished.SCENARIO)
                 }
             }
         }
@@ -264,6 +264,7 @@ class MainActivityViewModel : ViewModel() {
                         viewModelScope.launch(Dispatchers.IO) {
                             createNewScenario()
                             _dataBaseObjectsSet.postValue(true)
+                            _finished.postValue(Finished.SCENARIO)
                         }
                     }
                 } else {
@@ -295,7 +296,6 @@ class MainActivityViewModel : ViewModel() {
             )
             database.insertScenario(scenario)
             _currentScenario.postValue(database.getLastScenarioByUserId(currentUser.value!!.UserID))
-            _finished.postValue(Finished.SCENARIO)
         }
     }
 

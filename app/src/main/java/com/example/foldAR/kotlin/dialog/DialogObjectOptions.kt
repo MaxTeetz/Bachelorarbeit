@@ -128,6 +128,7 @@ class DialogObjectOptions : DialogFragment() {
 
     private fun startUI() {
 
+
         viewModelMainActivity.setDatabaseObjectsSet(false)
         viewModelMainActivity.createTarget()
         viewModelMainActivity.placeTargetOnNewPosition()

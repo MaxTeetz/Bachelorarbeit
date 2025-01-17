@@ -505,6 +505,8 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
     //deletes all anchors
     fun deleteAnchor() {
+        Log.d("TargetSetUp", "3")
+
         wrappedAnchors.clear()
     }
 

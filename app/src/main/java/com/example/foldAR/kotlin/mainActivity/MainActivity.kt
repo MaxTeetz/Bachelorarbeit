@@ -96,6 +96,7 @@ class MainActivity : AppCompatActivity() {
         setUpDatabaseObservers()
         setUpDatabase()
         setUpFrameObserver()
+        observeExplicitCase()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -192,10 +193,10 @@ class MainActivity : AppCompatActivity() {
     private fun setUpNextRoundObserver() {
         viewModel.finished.observe(this) {
             if (it == Finished.SCENARIO) {
+                Log.d("TargetSetUp", "4")
                 renderer.deleteAnchor()
                 viewModel.resetTargetIndex()
                 renderer.resetReached()
-                selectLayout()
 
                 Toast.makeText(
                     this,
@@ -209,6 +210,14 @@ class MainActivity : AppCompatActivity() {
             }
             if (it == Finished.TEST)
                 nextRoundAlert()
+        }
+    }
+
+    private fun observeExplicitCase() {
+        viewModel.currentScenario.observe(this) {
+            it.takeIf { it?.ScenarioCase != null }?.let {
+                selectLayout(it.ScenarioCase)
+            }
         }
     }
 
@@ -352,18 +361,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun selectLayout() {
+    private fun selectLayout(scenarioCase: Scenarios) {
         val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)
         val height = displayMetrics.heightPixels
 
-        viewModel.currentScenario.value?.let { scenario ->
-            if (scenario.ScenarioCase == Scenarios.STATEOFTHEART)
-                setFoldARLayout(height)
-            else
-                setFoldARLayout(height / 2)
-        }
+
+        if (scenarioCase == Scenarios.STATEOFTHEART)
+            setFoldARLayout(height)
+        else
+            setFoldARLayout(height / 2)
     }
 
     private fun setFoldARLayout(height: Int) {
