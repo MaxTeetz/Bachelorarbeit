@@ -30,6 +30,8 @@ class MainActivityViewModel : ViewModel() {
     //Database
     private lateinit var database: DatabaseViewModel
 
+    private var update = false
+
     private var _currentUser: MutableLiveData<User?> = MutableLiveData(null)
     val currentUser get() = _currentUser
 
@@ -41,8 +43,6 @@ class MainActivityViewModel : ViewModel() {
 
     private var _dataBaseObjectsSet: MutableLiveData<Boolean> = MutableLiveData(false)
     val dataBaseObjectsSet get() = _dataBaseObjectsSet
-
-    private var update = false
 
     private var _finished: MutableLiveData<Finished> = MutableLiveData(Finished.NOTFINISHED)
     val finished get() = _finished
@@ -60,15 +60,6 @@ class MainActivityViewModel : ViewModel() {
     //to keep it simple just use some workarounds by not manipulating it at all
     private var _currentPosition: MutableLiveData<Int> = MutableLiveData(0)
     val currentPosition get() = _currentPosition
-
-    //map scaling
-    private var _scale: MutableLiveData<Float> = MutableLiveData<Float>(Constants.SCALE_FACTOR)
-    val scale get() = _scale
-
-    private var _touchEvent: MutableLiveData<MotionEvent> = MutableLiveData()
-    val touchEvent get() = _touchEvent
-
-    private var oldDegree = 0f
 
     private var _clickable: MutableLiveData<Boolean> = MutableLiveData(false)
     val clickable get() = _clickable
@@ -99,10 +90,9 @@ class MainActivityViewModel : ViewModel() {
         _renderer = renderer
     }
 
-    private fun setTouchEvent(motionEvent: MotionEvent) {
-        if (motionEvent.action == MotionEvent.ACTION_MOVE)
-            this._touchEvent.value = motionEvent
-    }
+    /**
+     * Manipulation
+     */
 
     fun glSurfaceViewFoldAR(motionEvent: MotionEvent, placement: Boolean) {
 
@@ -112,7 +102,7 @@ class MainActivityViewModel : ViewModel() {
                 setPose()
             }
             if (motionEvent.action == MotionEvent.ACTION_MOVE && motionEvent.y < dimension) {
-                setTouchEvent(motionEvent)
+                glSurfaceViewChangeAnchor(motionEvent)
             }
         }
 
@@ -123,22 +113,16 @@ class MainActivityViewModel : ViewModel() {
     }
 
     //Todo eventually performance issues due to unnecessary calculations
-    fun glSurfaceViewChangeAnchor() {
+    private fun glSurfaceViewChangeAnchor(motionEvent: MotionEvent) {
 
         renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
+            when (motionEvent.action) {
 
-            val currentTouchEvent = touchEvent.value
-
-            currentTouchEvent?.let {
-                when (it.action) {
-
-                    MotionEvent.ACTION_MOVE -> {
-                        setHeight(it.y)
-                    }
+                MotionEvent.ACTION_MOVE -> {
+                    setHeight(motionEvent.y)
                 }
             }
             renderer.moveAnchorHeight(newHeight, 0)
-
         }
     }
 
@@ -173,15 +157,9 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-    private fun rotateObject(motionEvent: MotionEvent, currentMain: Float) {
-        val rotation = ((motionEvent.getX(0) - currentMain) / 1.47) % 360
-        renderer.rotateAnchor(rotation.toFloat(), currentPosition.value!!)
-    }
-
-    private fun resetRotation() {
-        oldDegree = 0f
-    }
-
+    /**
+     * Tests
+     * **/
     fun placeObjectInFocus() { //gets camera rotation and places object in front of it
         val rotation = renderer.refreshAngle()
         val camPos = renderer.camera.value!!.pose
@@ -220,6 +198,9 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Database
+     * **/
     fun setUpDatabase(database: DatabaseViewModel) {
         this.database = database
     }

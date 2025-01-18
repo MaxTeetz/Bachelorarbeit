@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import com.example.foldAR.kotlin.constants.Constants
 import com.example.foldAR.kotlin.helloar.databinding.FragmentCameraPlaneBinding
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -27,7 +28,7 @@ class CameraPlaneFragment : Fragment() {
     private val coroutine1 = Job()
     private val coroutineScope1 = CoroutineScope(coroutine1 + Dispatchers.Main)
 
-//    private var scaleFactor = Constants.scaleFactor
+    //    private var scaleFactor = Constants.scaleFactor
     private var previousCount = 0
 
     private lateinit var startingPoint: Pair<Float, Float>
@@ -69,10 +70,8 @@ class CameraPlaneFragment : Fragment() {
             }
         }
 
-        viewModelActivity.scale.observe(viewLifecycleOwner) {
-            viewModel.setRange(it)
-            binding.imageMoveObjectPlane.setImageBitmap(viewModel.drawCoordinateSystem())
-        }
+        viewModel.setRange(Constants.SCALE_FACTOR)
+        binding.imageMoveObjectPlane.setImageBitmap(viewModel.drawCoordinateSystem())
 
         viewModelActivity.currentPosition.observe(viewLifecycleOwner) {
             viewModel.setCurrentPosition(it)
@@ -117,7 +116,11 @@ class CameraPlaneFragment : Fragment() {
                         if (previousCount == 1) {
                             if (event.y >= 0)
                                 viewModelActivity.changeAnchorsPlaneCamera(
-                                    viewModel.moveAnchors(this.startingPoint, event, binding.imageMoveObjectPlane)
+                                    viewModel.moveAnchors(
+                                        this.startingPoint,
+                                        event,
+                                        binding.imageMoveObjectPlane
+                                    )
                                 )
 
                         }

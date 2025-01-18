@@ -89,14 +89,13 @@ class MainActivity : AppCompatActivity() {
         setupSettings()
         setupButtons()
         setScale()
-        setUpMovementObserver()
         setUpClickableObserver()
         setUpNextRoundObserver()
         setUpNextTargetObserver()
         setUpDatabaseObservers()
         setUpDatabase()
         setUpFrameObserver()
-        observeExplicitCase()
+        setupExplicitCaseObserver()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -110,6 +109,55 @@ class MainActivity : AppCompatActivity() {
     private fun setUpDatabase() {
         viewModel.setUpDatabase(databaseViewModel)
         viewModel.setLastUser()
+    }
+
+    /**
+     * Observers
+     **/
+
+    //change button outcome
+    private fun setUpClickableObserver() {
+        viewModel.clickable.observe(this) {
+            binding.settingsButton.apply {
+                if (it)
+                    setBackgroundResource(R.drawable.ic_settings)
+                else
+                    setBackgroundResource(R.drawable.green_arrow)
+            }
+
+        }
+    }
+
+    //next scenario i.e. folded or unfolded
+    private fun setUpNextRoundObserver() {
+        viewModel.finished.observe(this) {
+            if (it == Finished.SCENARIO) {
+                renderer.deleteAnchor()
+                viewModel.resetTargetIndex()
+                renderer.resetReached()
+
+                Toast.makeText(
+                    this,
+                    "Scenario ${viewModel.currentScenario.value!!.ScenarioCase}. Platziere ein neues Objekt, um fortfahren zu können!",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                viewModel.setClickable(true)
+                tapHelper.onResume()
+
+            }
+            if (it == Finished.TEST)
+                nextRoundAlert()
+        }
+    }
+
+    //next target within scenario
+    private fun setUpNextTargetObserver() {
+        renderer.reached.observe(this) {
+            if (it == true) {
+                viewModel.updateTestCaseEndTime()
+            }
+        }
     }
 
     private fun setUpDatabaseObservers() {
@@ -142,6 +190,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupExplicitCaseObserver() {
+        viewModel.currentScenario.observe(this) { scenario ->
+            scenario?.ScenarioCase?.let { scenarioCase ->
+                tapHelper.setScenario(scenarioCase)
+                selectLayout(scenarioCase)
+            }
+        }
+    }
+
     private fun setupNavigation() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
@@ -161,47 +218,6 @@ class MainActivity : AppCompatActivity() {
                 viewModel.setScaleFactor(binding.surfaceview)
             }
         })
-    }
-
-    //next target within scenario
-    private fun setUpNextTargetObserver() {
-        renderer.reached.observe(this) {
-            if (it == true) {
-                viewModel.updateTestCaseEndTime()
-            }
-        }
-    }
-
-    //next scenario i.e. folded or unfolded
-    private fun setUpNextRoundObserver() {
-        viewModel.finished.observe(this) {
-            if (it == Finished.SCENARIO) {
-                renderer.deleteAnchor()
-                viewModel.resetTargetIndex()
-                renderer.resetReached()
-
-                Toast.makeText(
-                    this,
-                    "Scenario ${viewModel.currentScenario.value!!.ScenarioCase}. Platziere ein neues Objekt, um fortfahren zu können!",
-                    Toast.LENGTH_LONG
-                ).show()
-
-                viewModel.setClickable(true)
-                tapHelper.onResume()
-
-            }
-            if (it == Finished.TEST)
-                nextRoundAlert()
-        }
-    }
-
-    private fun observeExplicitCase() {
-        viewModel.currentScenario.observe(this) { scenario ->
-            scenario?.ScenarioCase?.let { scenarioCase ->
-                tapHelper.setScenario(scenarioCase)
-                selectLayout(scenarioCase)
-            }
-        }
     }
 
     //shows alert if target is reached
@@ -323,16 +339,6 @@ class MainActivity : AppCompatActivity() {
             }.show()
     }
 
-    /**
-     * Observers
-     **/
-//height movement and rotation
-    private fun setUpMovementObserver() {
-        viewModel.touchEvent.observe(this) {
-            viewModel.glSurfaceViewChangeAnchor()
-        }
-    }
-
     //start scenario button
     private fun setupButtons() {
 
@@ -346,19 +352,6 @@ class MainActivity : AppCompatActivity() {
                 else
                     DialogObjectOptions.newInstance().show(supportFragmentManager, "")
             }
-        }
-    }
-
-    //change button outcome
-    private fun setUpClickableObserver() {
-        viewModel.clickable.observe(this) {
-            binding.settingsButton.apply {
-                if (it)
-                    setBackgroundResource(R.drawable.ic_settings)
-                else
-                    setBackgroundResource(R.drawable.green_arrow)
-            }
-
         }
     }
 
