@@ -2,6 +2,7 @@ package com.example.foldAR.java.helpers;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -9,6 +10,7 @@ import android.view.View.OnTouchListener;
 
 import androidx.annotation.NonNull;
 
+import com.example.foldAR.kotlin.constants.Scenarios;
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -21,10 +23,7 @@ import java.util.concurrent.BlockingQueue;
 public final class TapHelper implements OnTouchListener {
 
     private final MainActivityViewModel viewModel;
-    private int previousCount = 0;
-    private Float currentMain = 0f;
-
-    private int dimension;
+    private Scenarios scenario;
 
     //simple check to see if placement or moving action
     Boolean placement = true; //Todo for not lazy person
@@ -38,9 +37,8 @@ public final class TapHelper implements OnTouchListener {
    *
    * @param context the application's context.
    */
-  public TapHelper(Context context, MainActivityViewModel viewModel, int dimensions) {
+  public TapHelper(Context context, MainActivityViewModel viewModel) {
       this.viewModel = viewModel;
-      this.dimension = dimensions;
 
     gestureDetector =
         new GestureDetector(
@@ -78,32 +76,20 @@ public final class TapHelper implements OnTouchListener {
   @Override
   public boolean onTouch(View view, MotionEvent motionEvent) {
 
-      if (motionEvent.getPointerCount() != previousCount) {
-          previousCount = motionEvent.getPointerCount();
-          if(motionEvent.getPointerCount() == 2) {
-              currentMain = motionEvent.getX(0);
-              viewModel.resetRotation();
-          }
-      }
+      if(this.scenario == Scenarios.STATEOFTHEART)
+          viewModel.glSurfaceViewStateOfTheArt(motionEvent, placement);
+      else
+          viewModel.glSurfaceViewFoldAR( motionEvent, placement);
 
-      if(!placement){
-          if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-              viewModel.setInitialY(motionEvent.getY());
-              viewModel.setPose();
-          }
-          if(previousCount == 2){
-              viewModel.rotateObject(motionEvent, currentMain);
-          }
-          if (motionEvent.getAction() == MotionEvent.ACTION_MOVE && previousCount == 1 && motionEvent.getY() < dimension) {
-              viewModel.setTouchEvent(motionEvent);
-          }
-      }
-
-    return gestureDetector.onTouchEvent(motionEvent);
+      return gestureDetector.onTouchEvent(motionEvent);
   }
 
     public void onResume(){
         this.placement = true;
+    }
+
+    public void setScenario(Scenarios scenario){
+      this.scenario = scenario;
     }
 
 }

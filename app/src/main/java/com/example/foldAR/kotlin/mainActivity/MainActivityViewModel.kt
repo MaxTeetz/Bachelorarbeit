@@ -42,7 +42,7 @@ class MainActivityViewModel : ViewModel() {
     private var _dataBaseObjectsSet: MutableLiveData<Boolean> = MutableLiveData(false)
     val dataBaseObjectsSet get() = _dataBaseObjectsSet
 
-    private var update = false;
+    private var update = false
 
     private var _finished: MutableLiveData<Finished> = MutableLiveData(Finished.NOTFINISHED)
     val finished get() = _finished
@@ -80,6 +80,13 @@ class MainActivityViewModel : ViewModel() {
 
     private var viewScale = 0f
 
+    //glSurfaceView variables
+    private var dimension: Int = 0
+
+    fun setDimension(height: Int) {
+        this.dimension = height
+    }
+
     fun resetTargetIndex() {
         this._targetIndex.value = 0
     }
@@ -92,14 +99,31 @@ class MainActivityViewModel : ViewModel() {
         _renderer = renderer
     }
 
-    fun setTouchEvent(motionEvent: MotionEvent) {
+    private fun setTouchEvent(motionEvent: MotionEvent) {
         if (motionEvent.action == MotionEvent.ACTION_MOVE)
             this._touchEvent.value = motionEvent
     }
 
+    fun glSurfaceViewFoldAR(motionEvent: MotionEvent, placement: Boolean) {
+
+        if (!placement && motionEvent.pointerCount == 1) {
+            if (motionEvent.action == MotionEvent.ACTION_DOWN) {
+                setInitialY(motionEvent.y)
+                setPose()
+            }
+            if (motionEvent.action == MotionEvent.ACTION_MOVE && motionEvent.y < dimension) {
+                setTouchEvent(motionEvent)
+            }
+        }
+
+    }
+
+    fun glSurfaceViewStateOfTheArt(motionEvent: MotionEvent, placement: Boolean) {
+
+    }
 
     //Todo eventually performance issues due to unnecessary calculations
-    fun changeAnchorPosition() {
+    fun glSurfaceViewChangeAnchor() {
 
         renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
 
@@ -122,7 +146,7 @@ class MainActivityViewModel : ViewModel() {
         this.viewScale = (Constants.BITMAP_SIZE.toFloat() / view.height.toFloat())
     }
 
-    fun setInitialY(y: Float) {
+    private fun setInitialY(y: Float) {
         initialY = y
     }
 
@@ -149,12 +173,12 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-    fun rotateObject(motionEvent: MotionEvent, currentMain: Float) {
+    private fun rotateObject(motionEvent: MotionEvent, currentMain: Float) {
         val rotation = ((motionEvent.getX(0) - currentMain) / 1.47) % 360
         renderer.rotateAnchor(rotation.toFloat(), currentPosition.value!!)
     }
 
-    fun resetRotation() {
+    private fun resetRotation() {
         oldDegree = 0f
     }
 
@@ -330,51 +354,51 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-fun updateTestCaseStartTime() {
+    fun updateTestCaseStartTime() {
 
-    val currentTime = System.currentTimeMillis().toString()
-    update = true
+        val currentTime = System.currentTimeMillis().toString()
+        update = true
 
-    viewModelScope.launch(Dispatchers.IO) {
-        database.updateStartTime(currentTime, currentTestCase.value!!.TestCaseID)
-        _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
-    }
-}
-
-fun insertUser(name: String) {
-    viewModelScope.launch(Dispatchers.IO) {
-        database.insertUser(User(Username = name))
-        _currentUser.postValue(database.getLastUser())
-    }
-}
-
-fun insertDataSet() {
-
-    if (update) {
-        val camera = renderer.camera.value!!.pose
-        val movingObject = renderer.wrappedAnchors[0].anchor.pose
-        val targetObject = renderer.wrappedAnchors[1].anchor.pose
         viewModelScope.launch(Dispatchers.IO) {
-            database.insertDataSet(
-                DataSet(
-                    TestCaseID = currentTestCase.value!!.TestCaseID,
-                    Time = System.currentTimeMillis().toString(),
-                    CameraPositionX = camera.tx(),
-                    CameraPositionY = camera.ty(),
-                    CameraPositionZ = camera.tz(),
-                    CameraRoatationX = camera.qx(),
-                    CameraRoatationY = camera.ty(),
-                    CameraRoatationZ = camera.qz(),
-                    CameraRoatationW = camera.qw(),
-                    Location_ManipulatedObjectX = movingObject.tx(),
-                    Location_ManipulatedObjectY = movingObject.ty(),
-                    Location_ManipulatedObjectZ = movingObject.tz(),
-                    Location_TargetObjectX = targetObject.tx(),
-                    Location_TargetObjectY = targetObject.ty(),
-                    Location_TargetObjectZ = targetObject.tz(),
-                )
-            )
+            database.updateStartTime(currentTime, currentTestCase.value!!.TestCaseID)
+            _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
         }
     }
-}
+
+    fun insertUser(name: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.insertUser(User(Username = name))
+            _currentUser.postValue(database.getLastUser())
+        }
+    }
+
+    fun insertDataSet() {
+
+        if (update) {
+            val camera = renderer.camera.value!!.pose
+            val movingObject = renderer.wrappedAnchors[0].anchor.pose
+            val targetObject = renderer.wrappedAnchors[1].anchor.pose
+            viewModelScope.launch(Dispatchers.IO) {
+                database.insertDataSet(
+                    DataSet(
+                        TestCaseID = currentTestCase.value!!.TestCaseID,
+                        Time = System.currentTimeMillis().toString(),
+                        CameraPositionX = camera.tx(),
+                        CameraPositionY = camera.ty(),
+                        CameraPositionZ = camera.tz(),
+                        CameraRoatationX = camera.qx(),
+                        CameraRoatationY = camera.ty(),
+                        CameraRoatationZ = camera.qz(),
+                        CameraRoatationW = camera.qw(),
+                        Location_ManipulatedObjectX = movingObject.tx(),
+                        Location_ManipulatedObjectY = movingObject.ty(),
+                        Location_ManipulatedObjectZ = movingObject.tz(),
+                        Location_TargetObjectX = targetObject.tx(),
+                        Location_TargetObjectY = targetObject.ty(),
+                        Location_TargetObjectZ = targetObject.tz(),
+                    )
+                )
+            }
+        }
+    }
 }

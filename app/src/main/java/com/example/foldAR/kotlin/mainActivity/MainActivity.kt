@@ -102,13 +102,9 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("ClickableViewAccessibility")
     private fun setupBinding() {
         surfaceView = findViewById(R.id.surfaceview)
-        tapHelper = TapHelper(this, viewModel, getSurfaceViewDimensions()).also {
+        tapHelper = TapHelper(this, viewModel).also {
             surfaceView.setOnTouchListener(it)
         }
-    }
-
-    private fun getSurfaceViewDimensions(): Int {
-        return binding.surfaceview.layoutParams.height
     }
 
     private fun setUpDatabase() {
@@ -200,9 +196,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeExplicitCase() {
-        viewModel.currentScenario.observe(this) {
-            it.takeIf { it?.ScenarioCase != null }?.let {
-                selectLayout(it.ScenarioCase)
+        viewModel.currentScenario.observe(this) { scenario ->
+            scenario?.ScenarioCase?.let { scenarioCase ->
+                tapHelper.setScenario(scenarioCase)
+                selectLayout(scenarioCase)
             }
         }
     }
@@ -329,10 +326,10 @@ class MainActivity : AppCompatActivity() {
     /**
      * Observers
      **/
-    //height movement and rotation
+//height movement and rotation
     private fun setUpMovementObserver() {
         viewModel.touchEvent.observe(this) {
-            viewModel.changeAnchorPosition()
+            viewModel.glSurfaceViewChangeAnchor()
         }
     }
 
@@ -356,7 +353,7 @@ class MainActivity : AppCompatActivity() {
     private fun setUpClickableObserver() {
         viewModel.clickable.observe(this) {
             binding.settingsButton.apply {
-                if(it)
+                if (it)
                     setBackgroundResource(R.drawable.ic_settings)
                 else
                     setBackgroundResource(R.drawable.green_arrow)
@@ -373,8 +370,7 @@ class MainActivity : AppCompatActivity() {
 
 
         if (scenarioCase == Scenarios.STATEOFTHEART)
-//            setFoldARLayout(height)
-            Toast.makeText(this, "$scenarioCase", Toast.LENGTH_LONG).show()
+            setFoldARLayout(height)
         else
             setFoldARLayout(height / 2)
     }
@@ -387,6 +383,7 @@ class MainActivity : AppCompatActivity() {
         binding.surfaceview.layoutParams = layoutParams
 
         binding.surfaceview.requestLayout()
+        viewModel.setDimension(height)
     }
 
     override fun onResume() {
