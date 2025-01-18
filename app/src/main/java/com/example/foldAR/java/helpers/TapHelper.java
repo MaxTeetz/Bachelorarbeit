@@ -2,7 +2,6 @@ package com.example.foldAR.java.helpers;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -47,7 +46,7 @@ public final class TapHelper implements OnTouchListener {
               @Override
               public boolean onSingleTapUp(@NonNull MotionEvent e) {
                 // Queue tap if there is space. Tap is lost if queue is full.
-                  if(placement){ //Todo add center of screen here as a def value if camera wise isn´t working out
+                  if(placement){
                       placement = false;
                       queuedSingleTaps.offer(e);
                 return true;
