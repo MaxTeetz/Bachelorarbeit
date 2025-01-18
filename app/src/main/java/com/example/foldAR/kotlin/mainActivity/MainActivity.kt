@@ -48,11 +48,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var databaseViewModel: DatabaseViewModel
+    private val viewModel: MainActivityViewModel by viewModels()
 
     private lateinit var navController: NavController
     private lateinit var _binding: ActivityMainBinding
     private val binding get() = _binding
-    private val viewModel: MainActivityViewModel by viewModels()
 
     private lateinit var surfaceView: GLSurfaceView
     private lateinit var renderer: HelloArRenderer
@@ -187,6 +187,7 @@ class MainActivity : AppCompatActivity() {
     private fun setUpFrameObserver() {
         renderer.camera.observe(this) {
             viewModel.insertDataSet()
+            viewModel.setRotationAngle()
         }
     }
 
@@ -362,9 +363,14 @@ class MainActivity : AppCompatActivity() {
         val height = displayMetrics.heightPixels
 
 
-        if (scenarioCase == Scenarios.STATEOFTHEART)
-            setFoldARLayout(height)
-        else
+        if (scenarioCase == Scenarios.STATEOFTHEART) {
+            Log.d(TAG, "$scenarioCase")
+            val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+            navHostFragment.let { fragment ->
+                supportFragmentManager.beginTransaction().detach(fragment!!).commit()
+            }
+//            setFoldARLayout(height)
+        } else
             setFoldARLayout(height / 2)
     }
 

@@ -1,5 +1,6 @@
 package com.example.foldAR.kotlin.mainActivity
 
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.MutableLiveData
@@ -67,12 +68,16 @@ class MainActivityViewModel : ViewModel() {
     private var _targetIndex: MutableLiveData<Int> = MutableLiveData(0)
     val targetIndex get() = _targetIndex
 
-    private var initialY = 0f
-
     private var viewScale = 0f
 
     //glSurfaceView variables
     private var dimension: Int = 0
+    private val range = Constants.SCALE_FACTOR * 0.1f
+    private var rotation: Float = 0f
+
+    private var initialX = 0f
+    private var initialY = 0f
+    private var initialZ = 0f
 
     fun setDimension(height: Int) {
         this.dimension = height
@@ -90,6 +95,10 @@ class MainActivityViewModel : ViewModel() {
         _renderer = renderer
     }
 
+    fun setRotationAngle() {
+        this.rotation = renderer.refreshAngle()
+    }
+
     /**
      * Manipulation
      */
@@ -98,7 +107,7 @@ class MainActivityViewModel : ViewModel() {
 
         if (!placement && motionEvent.pointerCount == 1) {
             if (motionEvent.action == MotionEvent.ACTION_DOWN) {
-                setInitialY(motionEvent.y)
+                this.initialY = motionEvent.y
                 setPose()
             }
             if (motionEvent.action == MotionEvent.ACTION_MOVE && motionEvent.y < dimension) {
@@ -108,8 +117,62 @@ class MainActivityViewModel : ViewModel() {
 
     }
 
-    fun glSurfaceViewStateOfTheArt(motionEvent: MotionEvent, placement: Boolean) {
+    //one finger x and y, if second finger is set z
+    fun glSurfaceViewStateOfTheArt(
+        event: MotionEvent,
+        placement: Boolean,
+        view: View
+    ) {
+        if (!placement && event.pointerCount == 1) {
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                this.initialX = event.x
+                this.initialY = event.y
+                this.initialZ = event.y
+                setPose()
+            }
+            if (event.action == MotionEvent.ACTION_MOVE) {
+                changeAnchorsPlaneCamera(
+                    moveAnchors(
+                        Pair(initialX, event.y),
+                        event,
+                        view,
+                    )
+                )
+                glSurfaceViewChangeAnchor(event)
+            }
+        }
+        /* } else if (motionEvent.pointerCount == 2) {
+             if (motionEvent.action == MotionEvent.ACTION_POINTER_DOWN) {
+                 this.initialZ = motionEvent.getY(motionEvent.actionIndex)
+                 setPose()
+             }
+             if (motionEvent.action == MotionEvent.ACTION_MOVE) {
+                 changeAnchorsPlaneCamera(moveAnchors(motionEvent, view, startingPoint))
+             }
+         }*/
+    }
 
+    private fun moveAnchors(
+        startingPoint: Pair<Float, Float>,
+        event: MotionEvent,
+        view: View,
+    ): Pair<Float, Float> {
+
+        val scaleFactorX = Constants.BITMAP_SIZE.toFloat() / view.height.toFloat()
+        val scaleFactorY = Constants.BITMAP_SIZE.toFloat() / view.height.toFloat()
+
+        val pointX: Float = (event.x - startingPoint.first) * scaleFactorX
+        val pointZ: Float = (event.y - startingPoint.second) * scaleFactorY
+
+        Log.d("TapHelperPoint", "x: ${startingPoint.first}     z: $scaleFactorX")
+
+        val newX = -(pointX / (Constants.METER_TO_CM))
+        val newZ = (pointZ / (Constants.METER_TO_CM))
+
+        val x = (cos(rotation) * newX - sin(rotation) * newZ) * range
+        val z = -(sin(rotation) * newX + cos(rotation) * newZ) * range
+
+        return Pair(x, z)
     }
 
     //Todo eventually performance issues due to unnecessary calculations
@@ -128,10 +191,6 @@ class MainActivityViewModel : ViewModel() {
 
     fun setScaleFactor(view: View) {
         this.viewScale = (Constants.BITMAP_SIZE.toFloat() / view.height.toFloat())
-    }
-
-    private fun setInitialY(y: Float) {
-        initialY = y
     }
 
     private fun setHeight(newY: Float) {

@@ -2,6 +2,7 @@ package com.example.foldAR.java.helpers;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -76,7 +77,7 @@ public final class TapHelper implements OnTouchListener {
   public boolean onTouch(View view, MotionEvent motionEvent) {
 
       if(this.scenario == Scenarios.STATEOFTHEART)
-          viewModel.glSurfaceViewStateOfTheArt(motionEvent, placement);
+          viewModel.glSurfaceViewStateOfTheArt(motionEvent, placement, view);
       else
           viewModel.glSurfaceViewFoldAR( motionEvent, placement);
 
