@@ -154,18 +154,6 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.hide()
     }
 
-    //start scenario button
-    private fun setupButtons() {
-
-        binding.settingsButton.apply {
-            //wait until db is set
-            isClickable = false
-            setOnClickListener {
-                DialogObjectOptions.newInstance().show(supportFragmentManager, "")
-            }
-        }
-    }
-
     //gets view width after its completely inflated
     private fun setScale() {
         binding.surfaceview.viewTreeObserver.addOnGlobalLayoutListener(object :
@@ -350,11 +338,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //start scenario button
+    private fun setupButtons() {
+
+        binding.settingsButton.apply {
+            //wait until db is set
+            isClickable = false
+
+            setOnClickListener {
+                if (!viewModel.clickable.value!!)
+                    renderer.reachedTrue()
+                else
+                    DialogObjectOptions.newInstance().show(supportFragmentManager, "")
+            }
+        }
+    }
+
     //change button outcome
     private fun setUpClickableObserver() {
         viewModel.clickable.observe(this) {
+            binding.settingsButton.apply {
+                if(it)
+                    setBackgroundResource(R.drawable.ic_settings)
+                else
+                    setBackgroundResource(R.drawable.green_arrow)
+            }
 
-            binding.settingsButton.isClickable = it
         }
     }
 

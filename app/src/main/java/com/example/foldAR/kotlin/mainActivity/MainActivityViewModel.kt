@@ -72,7 +72,7 @@ class MainActivityViewModel : ViewModel() {
 
     private var oldDegree = 0f
 
-    private var _clickable: MutableLiveData<Boolean> = MutableLiveData(true)
+    private var _clickable: MutableLiveData<Boolean> = MutableLiveData(false)
     val clickable get() = _clickable
 
     private var _targetIndex: MutableLiveData<Int> = MutableLiveData(0)
