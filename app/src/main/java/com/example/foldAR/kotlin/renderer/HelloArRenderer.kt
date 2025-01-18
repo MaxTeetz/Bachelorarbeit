@@ -115,6 +115,9 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     private var _reached: MutableLiveData<Boolean> = MutableLiveData(false)
     val reached get() = _reached
 
+    private var _distance: Float = 0f
+    val distance get() = _distance
+
     // Environmental HDR
     lateinit var dfgTexture: Texture
     lateinit var cubemapFilter: SpecularCubemapFilter
@@ -502,12 +505,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
         }
     }
 
-    //deletes all anchors
-    fun deleteAnchor() {
-        Log.d("TargetSetUp", "3")
-
-        wrappedAnchors.clear()
-    }
+    fun deleteAnchor() = wrappedAnchors.clear()
 
     private fun moveAnchor(moveX: Float, moveY: Float, moveZ: Float, position: Int) {
         wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
@@ -536,16 +534,6 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
                     wrappedAnchors[position] = newAnchor
 
-                    if (wrappedAnchors.size == 2)
-                        checkIfInTargetRange()
-                    Log.d(
-                        "NewPosObject",
-                        "Anker:   ${wrappedAnchors[0].anchor.pose.tx()}   ${wrappedAnchors[0].anchor.pose.tz()}"
-                    )
-                    Log.d(
-                        "NewPosObject",
-                        "Kamera:  ${camera.value!!.pose.tx()}   ${camera.value!!.pose.tz()}"
-                    )
                 } ?: Log.e("MoveAnchor", "Session is null or invalid")
             } catch (e: Exception) {
                 Log.e("MoveAnchor", "Failed to create new Anchor", e)
@@ -553,19 +541,16 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
         }
     }
 
-    private fun checkIfInTargetRange() {
+    private fun calculateDistance() {
         val a = wrappedAnchors[0].anchor.pose
         val b = wrappedAnchors[1].anchor.pose
 
-        val distance =
+        this._distance =
             sqrt((b.tx() - a.tx()).pow(2) + (b.ty() - a.ty()).pow(2) + (b.tz() - a.tz()).pow(2))
-
-        //get close up to 10cm
-//        if (abs(distance) <= .5f && !reached.value!!)
-//            _reached.value = true
     }
 
-    fun reachedTrue(){
+    fun reachedTrue() {
+        calculateDistance()
         _reached.value = true
     }
 

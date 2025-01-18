@@ -23,7 +23,7 @@ class DatabaseViewModel(
 ) : ViewModel() {
 
     suspend fun insertUser(user: User) {
-            usersDAO.insertUser(user)
+        usersDAO.insertUser(user)
     }
 
     suspend fun insertScenario(scenario: Scenario) {
@@ -74,8 +74,12 @@ class DatabaseViewModel(
         testCaseDAO.updateEndTime(currentTime, testCaseId)
     }
 
-    suspend fun updateStartTime(currentTime: String, testCaseId: Int){
+    suspend fun updateStartTime(currentTime: String, testCaseId: Int) {
         testCaseDAO.updateStartTime(currentTime, testCaseId)
+    }
+
+    suspend fun updateDistance(distance: Float, testCaseId: Int) {
+        testCaseDAO.updateDistance(distance, testCaseId)
     }
 }
 

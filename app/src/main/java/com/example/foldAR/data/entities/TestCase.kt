@@ -18,5 +18,6 @@ data class TestCase(
     val ScenarioID: Int,
     val TestCaseName: Int,
     val StartTime: String?,
-    val EndTime: String?
+    val EndTime: String?,
+    val Distance: Float?
 )

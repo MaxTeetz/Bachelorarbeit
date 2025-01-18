@@ -1,6 +1,5 @@
 package com.example.foldAR.kotlin.mainActivity
 
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.MutableLiveData
@@ -43,7 +42,6 @@ class MainActivityViewModel : ViewModel() {
     private var _dataBaseObjectsSet: MutableLiveData<Boolean> = MutableLiveData(false)
     val dataBaseObjectsSet get() = _dataBaseObjectsSet
 
-    var testCase = 0
     private var update = false;
 
     private var _finished: MutableLiveData<Finished> = MutableLiveData(Finished.NOTFINISHED)
@@ -175,13 +173,11 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun createTarget() {
-        Log.d("TargetSetUp", "1")
         renderer.wrappedAnchors.add(renderer.secondAnchor)
     }
 
     //places object around the user; gets data from constant values
     fun placeTargetOnNewPosition() {
-        Log.d("TargetSetUp", "2")
         if (targetIndex.value!! <= Constants.MAX_TARGETS) {
             val rotation = renderer.refreshAngle()
             val camPos = renderer.camera.value!!.pose
@@ -215,7 +211,6 @@ class MainActivityViewModel : ViewModel() {
             _dataBaseObjectsSet.value = true
         } else {
             if (currentUser.value!!.Done) {
-                Log.d("TargetSetUp", "5")
                 renderer.deleteAnchor()
                 _currentUser.value = null
                 _currentScenario.value = null
@@ -249,7 +244,6 @@ class MainActivityViewModel : ViewModel() {
             if (currentTestCase.value!!.EndTime == null) {
                 database.deleteDataSet(currentTestCase.value!!.TestCaseID)
                 _targetIndex.value = currentTestCase.value!!.TestCaseName
-                Log.d("TargetIndexMain", "3: ${targetIndex.value}")
 
                 //only true in case that its after app start and not in between rounds
                 if (renderer.wrappedAnchors.size != 2)
@@ -276,7 +270,6 @@ class MainActivityViewModel : ViewModel() {
     }
 
     private suspend fun createNewScenario() {
-        Log.d("TestingDatabase", "scenario")
 
         if (currentUser.value != null) {
             val id = currentUser.value!!.UserID % 6
@@ -306,13 +299,13 @@ class MainActivityViewModel : ViewModel() {
 
     private fun createTestCase() {
 
-        Log.d("TestingDatabase", "testcase")
         if (currentUser.value != null && currentScenario.value != null) {
             val testCase = TestCase(
                 ScenarioID = currentScenario.value!!.ScenarioID,
                 TestCaseName = targetIndex.value!! + 1,
                 StartTime = null,
-                EndTime = null
+                EndTime = null,
+                Distance = null
             )
 
             viewModelScope.launch(Dispatchers.IO) {
@@ -325,60 +318,63 @@ class MainActivityViewModel : ViewModel() {
     fun updateTestCaseEndTime() {
         update = false
         val currentTime = System.currentTimeMillis().toString()
-        Log.d("SpecificTest", "testing the update")
-        this.testCase = targetIndex.value!!
-        viewModelScope.launch(Dispatchers.IO) {
-            database.updateEndTime(currentTime, currentTestCase.value!!.TestCaseID)
-            _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
-        }
-    }
-
-    fun updateTestCaseStartTime() {
-
-        val currentTime = System.currentTimeMillis().toString()
-        update = true
 
         viewModelScope.launch(Dispatchers.IO) {
-            database.updateStartTime(currentTime, currentTestCase.value!!.TestCaseID)
-            _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
-        }
-    }
 
-    fun insertUser(name: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            database.insertUser(User(Username = name))
-            _currentUser.postValue(database.getLastUser())
-        }
-    }
-
-    fun insertDataSet() {
-        Log.d("UpdatingTest", "3: $update")
-
-        if (update) {
-            val camera = renderer.camera.value!!.pose
-            val movingObject = renderer.wrappedAnchors[0].anchor.pose
-            val targetObject = renderer.wrappedAnchors[1].anchor.pose
-            viewModelScope.launch(Dispatchers.IO) {
-                database.insertDataSet(
-                    DataSet(
-                        TestCaseID = currentTestCase.value!!.TestCaseID,
-                        Time = System.currentTimeMillis().toString(),
-                        CameraPositionX = camera.tx(),
-                        CameraPositionY = camera.ty(),
-                        CameraPositionZ = camera.tz(),
-                        CameraRoatationX = camera.qx(),
-                        CameraRoatationY = camera.ty(),
-                        CameraRoatationZ = camera.qz(),
-                        CameraRoatationW = camera.qw(),
-                        Location_ManipulatedObjectX = movingObject.tx(),
-                        Location_ManipulatedObjectY = movingObject.ty(),
-                        Location_ManipulatedObjectZ = movingObject.tz(),
-                        Location_TargetObjectX = targetObject.tx(),
-                        Location_TargetObjectY = targetObject.ty(),
-                        Location_TargetObjectZ = targetObject.tz(),
-                    )
-                )
+            val currentTestCaseId = currentTestCase.value?.TestCaseID
+            currentTestCaseId?.let {
+                database.updateEndTime(currentTime, it)
+                database.updateDistance(renderer.distance, it)
+                _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
             }
         }
     }
+
+fun updateTestCaseStartTime() {
+
+    val currentTime = System.currentTimeMillis().toString()
+    update = true
+
+    viewModelScope.launch(Dispatchers.IO) {
+        database.updateStartTime(currentTime, currentTestCase.value!!.TestCaseID)
+        _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
+    }
+}
+
+fun insertUser(name: String) {
+    viewModelScope.launch(Dispatchers.IO) {
+        database.insertUser(User(Username = name))
+        _currentUser.postValue(database.getLastUser())
+    }
+}
+
+fun insertDataSet() {
+
+    if (update) {
+        val camera = renderer.camera.value!!.pose
+        val movingObject = renderer.wrappedAnchors[0].anchor.pose
+        val targetObject = renderer.wrappedAnchors[1].anchor.pose
+        viewModelScope.launch(Dispatchers.IO) {
+            database.insertDataSet(
+                DataSet(
+                    TestCaseID = currentTestCase.value!!.TestCaseID,
+                    Time = System.currentTimeMillis().toString(),
+                    CameraPositionX = camera.tx(),
+                    CameraPositionY = camera.ty(),
+                    CameraPositionZ = camera.tz(),
+                    CameraRoatationX = camera.qx(),
+                    CameraRoatationY = camera.ty(),
+                    CameraRoatationZ = camera.qz(),
+                    CameraRoatationW = camera.qw(),
+                    Location_ManipulatedObjectX = movingObject.tx(),
+                    Location_ManipulatedObjectY = movingObject.ty(),
+                    Location_ManipulatedObjectZ = movingObject.tz(),
+                    Location_TargetObjectX = targetObject.tx(),
+                    Location_TargetObjectY = targetObject.ty(),
+                    Location_TargetObjectZ = targetObject.tz(),
+                )
+            )
+        }
+    }
+}
 }

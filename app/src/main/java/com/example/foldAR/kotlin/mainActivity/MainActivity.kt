@@ -129,7 +129,6 @@ class MainActivity : AppCompatActivity() {
                 if (it.Done)
                     tapHelper.onResume()
             }
-            Log.d(TAG, "User: $it")
         }
 
         viewModel.currentScenario.observe(this) {
@@ -181,7 +180,6 @@ class MainActivity : AppCompatActivity() {
     private fun setUpNextRoundObserver() {
         viewModel.finished.observe(this) {
             if (it == Finished.SCENARIO) {
-                Log.d("TargetSetUp", "4")
                 renderer.deleteAnchor()
                 viewModel.resetTargetIndex()
                 renderer.resetReached()
@@ -218,7 +216,7 @@ class MainActivity : AppCompatActivity() {
 
         MaterialAlertDialogBuilder(this)
             .setTitle(getString(android.R.string.dialog_alert_title))
-            .setMessage("Nächste Runde ${viewModel.testCase}/20")
+            .setMessage("Nächste Runde ${viewModel.targetIndex.value}/20")
             .setCancelable(false)
             .setPositiveButton("Nächste Runde") { dialogInterface, _ -> //Todo disable reached until both are placed
                 if (renderer.wrappedAnchors.isNotEmpty()) {

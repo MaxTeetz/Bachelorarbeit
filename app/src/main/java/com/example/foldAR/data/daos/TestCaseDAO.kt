@@ -14,13 +14,12 @@ interface TestCaseDAO {
     @Query("SELECT * FROM TestCase WHERE ScenarioID = :scenarioId ORDER BY TestCaseID DESC LIMIT 1")
     suspend fun getLastTestCaseOfScenario(scenarioId: Int): TestCase?
 
-    //check if the last testCase was finished in case the app crashes -> used for deleting DataSets
-    @Query("SELECT * FROM TestCase ORDER BY TestCaseID DESC LIMIT 1")
-    suspend fun getLastTestCase(): TestCase
-
     @Query("UPDATE TESTCASE SET EndTime = :endTime WHERE TestCaseID = :testCaseId")
     suspend fun updateEndTime(endTime: String, testCaseId: Int)
 
     @Query("UPDATE TESTCASE SET StartTime = :startTime WHERE TestCaseID = :testCaseId")
     suspend fun updateStartTime(startTime: String, testCaseId: Int)
+
+    @Query("UPDATE TESTCASE SET Distance = :distance WHERE TestCaseID = :testCaseId")
+    suspend fun updateDistance(distance: Float, testCaseId: Int)
 }
