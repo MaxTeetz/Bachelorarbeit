@@ -223,9 +223,6 @@ class MainActivity : AppCompatActivity() {
 
     //shows alert if target is reached
     private fun nextRoundAlert() {
-
-        Log.d("UserReset", "2: ${viewModel.targetIndex.value}")
-
         if (isAlertDialogOpen) {
             return
         }
@@ -233,7 +230,7 @@ class MainActivity : AppCompatActivity() {
 
         MaterialAlertDialogBuilder(this)
             .setTitle(getString(android.R.string.dialog_alert_title))
-            .setMessage("${viewModel.testCase}/20")
+            .setMessage("Nächste Runde ${viewModel.testCase}/20")
             .setCancelable(false)
             .setPositiveButton("Nächste Runde") { dialogInterface, _ -> //Todo disable reached until both are placed
                 if (renderer.wrappedAnchors.isNotEmpty()) {
@@ -369,7 +366,8 @@ class MainActivity : AppCompatActivity() {
 
 
         if (scenarioCase == Scenarios.STATEOFTHEART)
-            setFoldARLayout(height)
+//            setFoldARLayout(height)
+            Toast.makeText(this, "$scenarioCase", Toast.LENGTH_LONG).show()
         else
             setFoldARLayout(height / 2)
     }

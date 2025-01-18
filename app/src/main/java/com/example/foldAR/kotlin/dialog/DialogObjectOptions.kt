@@ -113,9 +113,15 @@ class DialogObjectOptions : DialogFragment() {
 
     private fun showAlert() {
 
+        val scenario = viewModelMainActivity.currentScenario.value!!.ScenarioCase
+        val message: String = if (viewModelMainActivity.currentTestCase.value!!.TestCaseName == 1) {
+            "Testrunde. Klicke auf den Haken, wenn du mit der Steuerung von $scenario vertraut bist!"
+        } else
+            "Die nächste Runde ist $scenario"
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(android.R.string.dialog_alert_title))
-            .setMessage("Die nächste Runde ist Scenario ${viewModelMainActivity.currentScenario.value!!.ScenarioCase}")
+            .setMessage(message)
             .setCancelable(false)
             .setPositiveButton("Nächste Runde") { dialogInterface, _ ->
                 dialogInterface.dismiss()
