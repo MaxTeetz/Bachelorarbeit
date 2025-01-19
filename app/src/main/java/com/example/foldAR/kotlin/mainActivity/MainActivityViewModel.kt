@@ -127,7 +127,7 @@ class MainActivityViewModel : ViewModel() {
             if (event.action == MotionEvent.ACTION_DOWN) {
                 this.initialX = event.x
                 this.initialY = event.y
-                this.initialZ = event.y
+//                this.initialZ = event.y
                 setPose()
             }
             if (event.action == MotionEvent.ACTION_MOVE) {
@@ -141,15 +141,26 @@ class MainActivityViewModel : ViewModel() {
                 glSurfaceViewChangeAnchor(event)
             }
         }
-        /* } else if (motionEvent.pointerCount == 2) {
-             if (motionEvent.action == MotionEvent.ACTION_POINTER_DOWN) {
-                 this.initialZ = motionEvent.getY(motionEvent.actionIndex)
-                 setPose()
-             }
-             if (motionEvent.action == MotionEvent.ACTION_MOVE) {
-                 changeAnchorsPlaneCamera(moveAnchors(motionEvent, view, startingPoint))
-             }
-         }*/
+        if (event.pointerCount == 2) {
+            Log.d("SecondPointer", "1")
+            if (event.action == MotionEvent.ACTION_POINTER_DOWN) {
+                Log.d("SecondPointer", "2")
+                this.initialZ = event.y
+                setPose()
+            }
+            if (event.getPointerId(1) == MotionEvent.ACTION_MOVE) {
+                Log.d("SecondPointer", "3")
+                changeAnchorsPlaneCamera(
+                    moveAnchors(
+                        Pair(initialZ, event.x),
+                        event,
+                        view
+                    )
+                )
+                Log.d("SecondPointer", "4")
+                glSurfaceViewChangeAnchor(event)
+            }
+        }
     }
 
     private fun moveAnchors(
@@ -163,8 +174,6 @@ class MainActivityViewModel : ViewModel() {
 
         val pointX: Float = (event.x - startingPoint.first) * scaleFactorX
         val pointZ: Float = (event.y - startingPoint.second) * scaleFactorY
-
-        Log.d("TapHelperPoint", "x: ${startingPoint.first}     z: $scaleFactorX")
 
         val newX = -(pointX / (Constants.METER_TO_CM))
         val newZ = (pointZ / (Constants.METER_TO_CM))
