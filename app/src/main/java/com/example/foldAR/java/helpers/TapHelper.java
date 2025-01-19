@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.example.foldAR.kotlin.constants.Scenarios;
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel;
@@ -30,9 +31,11 @@ public final class TapHelper implements OnTouchListener {
 
   private final GestureDetector gestureDetector;
   private final BlockingQueue<MotionEvent> queuedSingleTaps = new ArrayBlockingQueue<>(16);
+  private final BlockingQueue<MotionEvent> queuedScrollTaps = new ArrayBlockingQueue<>(16);
 
 
-  /**
+
+    /**
    * Creates the tap helper.
    *
    * @param context the application's context.
@@ -40,30 +43,38 @@ public final class TapHelper implements OnTouchListener {
   public TapHelper(Context context, MainActivityViewModel viewModel) {
       this.viewModel = viewModel;
 
-    gestureDetector =
-        new GestureDetector(
-            context,
-            new GestureDetector.SimpleOnGestureListener() {
-              @Override
-              public boolean onSingleTapUp(@NonNull MotionEvent e) {
-                // Queue tap if there is space. Tap is lost if queue is full.
-                  if(placement){
-                      placement = false;
-                      queuedSingleTaps.offer(e);
-                return true;
-              }
-                  return false;
+      gestureDetector = new GestureDetector(
+              context,
+              new GestureDetector.SimpleOnGestureListener() {
+                  @Override
+                  public boolean onSingleTapUp(@NonNull MotionEvent e) {
+                      Log.d("TestScroll", "2");
 
-              }
+                      // Queue tap if there is space. Tap is lost if queue is full.
+                      if (placement) {
+                          placement = false;
+                          queuedSingleTaps.offer(e);
+                          return true;
+                      }
+                      return false;
+                  }
 
-              @Override
-              public boolean onDown(@NonNull MotionEvent e) {
-                return true;
+                  @Override
+                  public boolean onDown(@NonNull MotionEvent e) {
+                      return true;
+                  }
+
+                  @Override
+                  public boolean onScroll(@Nullable MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
+                      queuedScrollTaps.offer(e2);
+                      return true;
+                  }
               }
-            });
+      );
   }
 
-  /**
+
+    /**
    * Polls for a tap.
    *
    * @return if a tap was queued, a MotionEvent for the tap. Otherwise null if no taps are queued.
@@ -72,14 +83,18 @@ public final class TapHelper implements OnTouchListener {
     return queuedSingleTaps.poll();
   }
 
+  public MotionEvent pollScroll(){
+      return queuedScrollTaps.poll();
+  }
+
   @SuppressLint("ClickableViewAccessibility")
   @Override
   public boolean onTouch(View view, MotionEvent motionEvent) {
 
-      if(this.scenario == Scenarios.STATEOFTHEART)
-          viewModel.glSurfaceViewStateOfTheArt(motionEvent, placement, view);
-      else
-          viewModel.glSurfaceViewFoldAR( motionEvent, placement);
+//      if(this.scenario == Scenarios.STATEOFTHEART)
+//          viewModel.glSurfaceViewStateOfTheArt(motionEvent, placement, view);
+//      else
+//          viewModel.glSurfaceViewFoldAR( motionEvent, placement);
 
       return gestureDetector.onTouchEvent(motionEvent);
   }

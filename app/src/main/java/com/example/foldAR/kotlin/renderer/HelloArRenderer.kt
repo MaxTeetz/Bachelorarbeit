@@ -49,7 +49,7 @@ import kotlin.math.sqrt
 class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     DefaultLifecycleObserver {
     companion object {
-        val TAG = "HelloArRenderer"
+        val TAG = "HelloArRendererLog"
 
         // See the definition of updateSphericalHarmonicsCoefficients for an explanation of these
         // constants.
@@ -463,7 +463,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     // Handle only one tap per frame, as taps are usually low frequency compared to frame rate.
     private fun handleTap(frame: Frame, camera: Camera) {
         if (camera.trackingState != TrackingState.TRACKING) return
-        val tap = activity.tapHelper.poll() ?: return
+        val tap = activity.tapHelper.poll() ?: return checkIfObjectClicked(frame)
 
         val hitResultList = if (activity.instantPlacementSettings.isInstantPlacementEnabled) {
             frame.hitTestInstantPlacement(tap.x, tap.y, APPROXIMATE_DISTANCE_METERS)
@@ -501,6 +501,91 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             // depth-based occlusion. This dialog needs to be spawned on the UI thread.
             activity.runOnUiThread { activity.showOcclusionDialogIfNeeded() }
         }
+    }
+
+    private fun checkIfObjectClicked(frame: Frame) {
+        val tap = activity.tapHelper.pollScroll() ?: return
+        val hits = frame.hitTest(tap)
+
+        for (hit in hits) {
+            // Convert screen tap to a direction in 3D space
+            val hitResult = frame.hitTest(tap.x, tap.y)
+//            if (hitResult.isEmpty()) return
+
+            val tapPose = hitResult[0].hitPose
+            val tapDirection = floatArrayOf(
+                tapPose.tx() - frame.camera.pose.tx(),
+                tapPose.ty() - frame.camera.pose.ty(),
+                tapPose.tz() - frame.camera.pose.tz()
+            )
+
+            // Normalize the direction
+            val length = sqrt(
+                (tapDirection[0] * tapDirection[0] +
+                        tapDirection[1] * tapDirection[1] +
+                        tapDirection[2] * tapDirection[2]).toDouble()
+            )
+
+            val normalizedDirection = floatArrayOf(
+                (tapDirection[0] / length).toFloat(),
+                (tapDirection[1] / length).toFloat(),
+                (tapDirection[2] / length).toFloat()
+            )
+
+            // Calculate anchor position 5 meters away in the tap direction
+            val anchorPosition = floatArrayOf(
+                frame.camera.pose.tx() + normalizedDirection[0] * 5f,
+                frame.camera.pose.ty() + normalizedDirection[1] * 5f,
+                frame.camera.pose.tz() + normalizedDirection[2] * 5f
+            )
+
+            val anchorPose = Pose(anchorPosition, frame.camera.pose.rotationQuaternion)
+            val rayPose = session!!.createAnchor(anchorPose).pose
+
+            val closestPoint = closestPointFromLine(rayPose, camera.value!!.pose)
+            val distance = distanceFromLine(closestPoint, anchorPose)
+
+            if (distance > 0.2)
+                Log.d(TAG, "$distance")
+        }
+
+    }
+
+    private fun distanceFromLine(a: Triple<Float, Float, Float>, b: Pose): Float {
+        return sqrt(
+            (b.tx() - a.first).pow(2) + (b.ty() - a.second).pow(2) + (b.tz() - a.third).pow(2)
+        )
+    }
+
+    private fun closestPointFromLine(rayPose: Pose, pose: Pose): Triple<Float, Float, Float> {
+        val anchorPose = wrappedAnchors[0].anchor.pose
+
+        val lineVector: Triple<Float, Float, Float> = Triple(
+            rayPose.tx() - pose.tx(),
+            rayPose.ty() - pose.ty(),
+            rayPose.tz() - pose.tz(),
+        )
+
+        val pointVector: Triple<Float, Float, Float> = Triple(
+            anchorPose.tx() - rayPose.tx(),
+            anchorPose.ty() - rayPose.ty(),
+            anchorPose.tz() - rayPose.tz(),
+        )
+
+        val t = dotProduct(pointVector, lineVector) / dotProduct(lineVector, lineVector)
+
+        return Triple<Float, Float, Float>(
+            rayPose.tx() + t * lineVector.first,
+            rayPose.ty() + t * lineVector.second,
+            rayPose.tz() + t * lineVector.third
+        )
+    }
+
+    private fun dotProduct(
+        v1: Triple<Float, Float, Float>,
+        v2: Triple<Float, Float, Float>
+    ): Float {
+        return v1.first * v2.first + v1.second * v2.second + v1.third * v2.third
     }
 
     fun deleteAnchor() = wrappedAnchors.clear()

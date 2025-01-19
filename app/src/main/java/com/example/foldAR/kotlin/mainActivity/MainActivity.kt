@@ -369,7 +369,7 @@ class MainActivity : AppCompatActivity() {
             navHostFragment.let { fragment ->
                 supportFragmentManager.beginTransaction().detach(fragment!!).commit()
             }
-//            setFoldARLayout(height)
+            setFoldARLayout(height)
         } else
             setFoldARLayout(height / 2)
     }
