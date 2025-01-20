@@ -537,9 +537,6 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
                 Log.e("MoveAnchor", "Failed to create new Anchor", e)
             }
         }
-        val pose = wrappedAnchors[0].anchor.pose
-        Log.d("AnchorsMovement", "x: ${pose.tx()}   y: ${pose.ty()}     z: ${pose.tz()}")
-
     }
 
     private fun calculateDistance() {
@@ -560,6 +557,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     }
 
     fun moveAnchorPlane(moveX: Float, moveZ: Float, position: Int) {
+
         moveAnchor(
             moveX,
             wrappedAnchors[position].anchor.pose.ty(),

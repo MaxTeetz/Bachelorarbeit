@@ -47,7 +47,6 @@ class CameraPlaneFragment : Fragment() {
         setObservers()
         moveObject()
         binding.imageMoveObjectPlane.setImageBitmap(viewModel.drawCoordinateSystem())
-        //setZoomListeners()
     }
 
     override fun onDestroy() {
@@ -79,28 +78,11 @@ class CameraPlaneFragment : Fragment() {
 
     }
 
-//    private inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-//        override fun onScale(detector: ScaleGestureDetector): Boolean {
-//            scaleFactor *= detector.scaleFactor
-//            scaleFactor = scaleFactor.coerceIn(1.0f, 5.0f)
-//            viewModelActivity.setScale(scaleFactor)
-//            return true
-//        }
-//
-//        override fun onScaleEnd(detector: ScaleGestureDetector) {
-//            super.onScaleEnd(detector)
-//            //Todo detach and stuff ig
-//        }
-//    }
-
     @SuppressLint("ClickableViewAccessibility", "SuspiciousIndentation")
     private fun moveObject() {
-//        val scaleGestureDetector = ScaleGestureDetector(requireContext(), ScaleListener())
 
         binding.imageMoveObjectPlane.setOnTouchListener { view, event ->
             viewModelActivity.renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
-
-                //scaleGestureDetector.onTouchEvent(event)
 
                 if (event.pointerCount != previousCount) {
                     previousCount = event.pointerCount

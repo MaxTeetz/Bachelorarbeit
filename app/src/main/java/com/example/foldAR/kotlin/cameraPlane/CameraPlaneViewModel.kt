@@ -166,8 +166,8 @@ class CameraPlaneViewModel : ViewModel() {
         view: View
     ): Pair<Float, Float> {
 
-        val scaleFactorX = bitmap.width / view.width
-        val scaleFactorY = bitmap.height / view.height
+        val scaleFactorX = bitmap.width.toFloat() / view.width
+        val scaleFactorY = bitmap.height.toFloat() / view.height
 
         val pointX = (event.x - startingPoint.first) * scaleFactorX
         val pointZ = (event.y - startingPoint.second) * scaleFactorY
