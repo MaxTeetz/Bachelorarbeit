@@ -365,10 +365,10 @@ class MainActivity : AppCompatActivity() {
 
         if (scenarioCase == Scenarios.STATEOFTHEART) {
             Log.d(TAG, "$scenarioCase")
-            val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
-            navHostFragment.let { fragment ->
-                supportFragmentManager.beginTransaction().detach(fragment!!).commit()
-            }
+//            val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+//            navHostFragment.let { fragment ->
+//                supportFragmentManager.beginTransaction().detach(fragment!!).commit()
+//            }
 //            setFoldARLayout(height)
         } else
             setFoldARLayout(height / 2)

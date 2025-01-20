@@ -68,9 +68,11 @@ class MainActivityViewModel : ViewModel() {
     private var _targetIndex: MutableLiveData<Int> = MutableLiveData(0)
     val targetIndex get() = _targetIndex
 
-    private var viewScale = 0f
 
     //glSurfaceView variables
+    private var viewScaleHeight = 0f
+    private var viewScaleWidth = 0f
+
     private var dimension: Int = 0
     private val range = Constants.SCALE_FACTOR * 0.1f
     private var rotation: Float = 0f
@@ -121,59 +123,53 @@ class MainActivityViewModel : ViewModel() {
     fun glSurfaceViewStateOfTheArt(
         event: MotionEvent,
         placement: Boolean,
-        view: View
     ) {
-        if (!placement && event.pointerCount == 1) {
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                this.initialX = event.x
-                this.initialY = event.y
-//                this.initialZ = event.y
-                setPose()
-            }
-            if (event.action == MotionEvent.ACTION_MOVE) {
-                changeAnchorsPlaneCamera(
-                    moveAnchors(
-                        Pair(initialX, event.y),
-                        event,
-                        view,
-                    )
-                )
-                glSurfaceViewChangeAnchor(event)
-            }
+
+        if (placement) return
+
+        when (event.pointerCount) {
+            1 -> oneFinger(event)
+            2 -> twoFingers(event)
         }
-        if (event.pointerCount == 2) {
-            Log.d("SecondPointer", "1")
-            if (event.action == MotionEvent.ACTION_POINTER_DOWN) {
-                Log.d("SecondPointer", "2")
-                this.initialZ = event.y
-                setPose()
-            }
-            if (event.getPointerId(1) == MotionEvent.ACTION_MOVE) {
-                Log.d("SecondPointer", "3")
-                changeAnchorsPlaneCamera(
-                    moveAnchors(
-                        Pair(initialZ, event.x),
-                        event,
-                        view
-                    )
-                )
-                Log.d("SecondPointer", "4")
-                glSurfaceViewChangeAnchor(event)
-            }
+    }
+
+
+    private fun oneFinger(event: MotionEvent) {
+
+        if (event.action == MotionEvent.ACTION_DOWN) {
+            this.initialX = event.x
+            this.initialY = event.y
+            setPose()
         }
+        if (event.action == MotionEvent.ACTION_MOVE) {
+            changeAnchorsPlaneCamera(moveAnchors(Pair(initialX, event.y), Pair(event.x, event.y)))
+            glSurfaceViewChangeAnchor(event)
+        }
+    }
+
+    private fun twoFingers(event: MotionEvent) {
+        if (event.action == MotionEvent.ACTION_UP)
+            Log.d("TwoFingerTest", "2")
+
+        if (event.action == MotionEvent.ACTION_POINTER_2_DOWN) {
+            this.initialZ = -event.getY(1)
+            setPose()
+        }
+        changeAnchorsPlaneCamera(
+            moveAnchors(
+                Pair(event.getX(1), -initialZ),
+                Pair(event.getX(1), event.getY(1))
+            )
+        )
     }
 
     private fun moveAnchors(
         startingPoint: Pair<Float, Float>,
-        event: MotionEvent,
-        view: View,
+        event: Pair<Float, Float>
     ): Pair<Float, Float> {
 
-        val scaleFactorX = Constants.BITMAP_SIZE.toFloat() / view.height.toFloat()
-        val scaleFactorY = Constants.BITMAP_SIZE.toFloat() / view.height.toFloat()
-
-        val pointX: Float = (event.x - startingPoint.first) * scaleFactorX
-        val pointZ: Float = (event.y - startingPoint.second) * scaleFactorY
+        val pointX: Float = (event.first - startingPoint.first) * viewScaleWidth
+        val pointZ: Float = (event.second - startingPoint.second) * viewScaleHeight
 
         val newX = -(pointX / (Constants.METER_TO_CM))
         val newZ = (pointZ / (Constants.METER_TO_CM))
@@ -199,13 +195,14 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun setScaleFactor(view: View) {
-        this.viewScale = (Constants.BITMAP_SIZE.toFloat() / view.height.toFloat())
+        this.viewScaleHeight = (Constants.BITMAP_SIZE.toFloat() / view.height.toFloat())
+        this.viewScaleWidth = (Constants.BITMAP_SIZE.toFloat() / view.width.toFloat())
     }
 
     private fun setHeight(newY: Float) {
 
         val currentHeight = pose!!.ty()
-        val addedHeight = ((initialY - newY) * viewScale) / 500
+        val addedHeight = ((initialY - newY) * viewScaleHeight) / 500
         val newHeight = currentHeight + addedHeight
 
         this.newHeight = newHeight
