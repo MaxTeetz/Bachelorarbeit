@@ -1,6 +1,5 @@
 package com.example.foldAR.kotlin.mainActivity
 
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.MutableLiveData
@@ -27,6 +26,10 @@ import kotlin.math.sin
 /**The viewModel handles the renderer as well as the delegation of the calculated data inside
  *  the fragments to the renderer**/
 class MainActivityViewModel : ViewModel() {
+
+    companion object {
+        val TAG = "ViewModelTesting"
+    }
 
     //Database
     private lateinit var database: DatabaseViewModel
@@ -81,6 +84,8 @@ class MainActivityViewModel : ViewModel() {
     private var initialY = 0f
     private var initialZ = 0f
 
+    private var firstFinger = true
+
     fun setDimension(height: Int) {
         this.dimension = height
     }
@@ -116,7 +121,6 @@ class MainActivityViewModel : ViewModel() {
                 glSurfaceViewChangeAnchor(motionEvent)
             }
         }
-
     }
 
     //one finger x and y, if second finger is set z
@@ -126,7 +130,6 @@ class MainActivityViewModel : ViewModel() {
     ) {
 
         if (placement) return
-
         when (event.pointerCount) {
             1 -> oneFinger(event)
             2 -> twoFingers(event)
@@ -136,7 +139,8 @@ class MainActivityViewModel : ViewModel() {
 
     private fun oneFinger(event: MotionEvent) {
 
-        if (event.action == MotionEvent.ACTION_DOWN) {
+
+        if (event.action == MotionEvent.ACTION_DOWN || !firstFinger) {
             this.initialX = event.x
             this.initialY = event.y
             setPose()
@@ -145,13 +149,14 @@ class MainActivityViewModel : ViewModel() {
             changeAnchorsPlaneCamera(moveAnchors(Pair(initialX, event.y), Pair(event.x, event.y)))
             glSurfaceViewChangeAnchor(event)
         }
+        firstFinger = true
+
     }
 
     private fun twoFingers(event: MotionEvent) {
-        if (event.action == MotionEvent.ACTION_UP)
-            Log.d("TwoFingerTest", "2")
 
-        if (event.action == MotionEvent.ACTION_POINTER_2_DOWN) {
+
+        if (event.action == MotionEvent.ACTION_POINTER_2_DOWN || firstFinger) {
             this.initialZ = -event.getY(1)
             setPose()
         }
@@ -161,6 +166,8 @@ class MainActivityViewModel : ViewModel() {
                 Pair(event.getX(1), event.getY(1))
             )
         )
+        firstFinger = false
+
     }
 
     private fun moveAnchors(
