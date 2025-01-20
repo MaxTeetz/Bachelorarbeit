@@ -25,10 +25,11 @@ import kotlin.math.sin
 
 /**The viewModel handles the renderer as well as the delegation of the calculated data inside
  *  the fragments to the renderer**/
+@Suppress("DEPRECATION")
 class MainActivityViewModel : ViewModel() {
 
     companion object {
-        val TAG = "ViewModelTesting"
+        const val TAG = "ViewModelTesting"
     }
 
     //Database
@@ -56,10 +57,12 @@ class MainActivityViewModel : ViewModel() {
         _dataBaseObjectsSet.value = case
     }
 
-    private var pose: Pose? = null
-    private var newHeight = 0f
+    //general manipulation
     private lateinit var _renderer: HelloArRenderer
     val renderer get() = _renderer
+
+    private var pose: Pose? = null
+    private var newHeight = 0f
 
     //to keep it simple just use some workarounds by not manipulating it at all
     private var _currentPosition: MutableLiveData<Int> = MutableLiveData(0)
@@ -106,6 +109,17 @@ class MainActivityViewModel : ViewModel() {
         this.rotation = renderer.refreshAngle()
     }
 
+    fun setScaleFactor(view: View) {
+        this.viewScaleHeight = (Constants.BITMAP_SIZE.toFloat() / view.height.toFloat())
+        this.viewScaleWidth = (Constants.BITMAP_SIZE.toFloat() / view.width.toFloat())
+    }
+
+    fun setPose() {
+        renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
+            this.pose = renderer.wrappedAnchors[currentPosition.value!!].anchor.pose
+        }
+    }
+
     /**
      * Manipulation
      */
@@ -146,7 +160,12 @@ class MainActivityViewModel : ViewModel() {
             setPose()
         }
         if (event.action == MotionEvent.ACTION_MOVE) {
-            changeAnchorsPlaneCamera(moveAnchors(Pair(initialX, event.y), Pair(event.x, event.y)))
+            changeAnchorsPlaneCamera(
+                moveAnchorsPlane(
+                    Pair(initialX, event.y),
+                    Pair(event.x, event.y)
+                )
+            )
             glSurfaceViewChangeAnchor(event)
         }
         firstFinger = true
@@ -161,16 +180,15 @@ class MainActivityViewModel : ViewModel() {
             setPose()
         }
         changeAnchorsPlaneCamera(
-            moveAnchors(
+            moveAnchorsPlane(
                 Pair(event.getX(1), -initialZ),
                 Pair(event.getX(1), event.getY(1))
             )
         )
         firstFinger = false
-
     }
 
-    private fun moveAnchors(
+    private fun moveAnchorsPlane(
         startingPoint: Pair<Float, Float>,
         event: Pair<Float, Float>
     ): Pair<Float, Float> {
@@ -191,26 +209,15 @@ class MainActivityViewModel : ViewModel() {
     private fun glSurfaceViewChangeAnchor(motionEvent: MotionEvent) {
 
         renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
-            when (motionEvent.action) {
-
-                MotionEvent.ACTION_MOVE -> {
-                    setHeight(motionEvent.y)
-                }
-            }
+            if (motionEvent.action == MotionEvent.ACTION_MOVE) setHeight(motionEvent.y)
             renderer.moveAnchorHeight(newHeight, 0)
         }
     }
 
-    fun setScaleFactor(view: View) {
-        this.viewScaleHeight = (Constants.BITMAP_SIZE.toFloat() / view.height.toFloat())
-        this.viewScaleWidth = (Constants.BITMAP_SIZE.toFloat() / view.width.toFloat())
-    }
-
     private fun setHeight(newY: Float) {
 
-        val currentHeight = pose!!.ty()
         val addedHeight = ((initialY - newY) * viewScaleHeight) / 500
-        val newHeight = currentHeight + addedHeight
+        val newHeight = pose!!.ty() + addedHeight
 
         this.newHeight = newHeight
 
@@ -222,12 +229,6 @@ class MainActivityViewModel : ViewModel() {
             position.second + pose!!.tz(),
             currentPosition.value!!
         )
-
-    fun setPose() {
-        renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
-            this.pose = renderer.wrappedAnchors[currentPosition.value!!].anchor.pose
-        }
-    }
 
     /**
      * Tests

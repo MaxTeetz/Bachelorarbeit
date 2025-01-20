@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainActivityViewModel by viewModels()
 
     private lateinit var navController: NavController
+    private lateinit var navHostFragment: NavHostFragment
     private lateinit var _binding: ActivityMainBinding
     private val binding get() = _binding
 
@@ -98,6 +99,9 @@ class MainActivity : AppCompatActivity() {
         setupExplicitCaseObserver()
     }
 
+    /**
+     * Binding
+     */
     @SuppressLint("ClickableViewAccessibility")
     private fun setupBinding() {
         surfaceView = findViewById(R.id.surfaceview)
@@ -106,6 +110,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //start scenario button
+    private fun setupButtons() {
+
+        binding.settingsButton.apply {
+            //wait until db is set
+            isClickable = false
+
+            setOnClickListener {
+                if (!viewModel.clickable.value!!)
+                    renderer.reachedTrue()
+                else
+                    DialogObjectOptions.newInstance().show(supportFragmentManager, "")
+            }
+        }
+    }
+
+    /**
+     * Navigation
+     */
+    private fun setupNavigation() {
+        navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
+        navController = navHostFragment.navController
+        supportActionBar?.hide()
+    }
+
+    /**
+     * Database
+     */
     private fun setUpDatabase() {
         viewModel.setUpDatabase(databaseViewModel)
         viewModel.setLastUser()
@@ -125,29 +158,6 @@ class MainActivity : AppCompatActivity() {
                     setBackgroundResource(R.drawable.green_arrow)
             }
 
-        }
-    }
-
-    //next scenario i.e. folded or unfolded
-    private fun setUpNextRoundObserver() {
-        viewModel.finished.observe(this) {
-            if (it == Finished.SCENARIO) {
-                renderer.deleteAnchor()
-                viewModel.resetTargetIndex()
-                renderer.resetReached()
-
-                Toast.makeText(
-                    this,
-                    "Scenario ${viewModel.currentScenario.value!!.ScenarioCase}. Platziere ein neues Objekt, um fortfahren zu können!",
-                    Toast.LENGTH_LONG
-                ).show()
-
-                viewModel.setClickable(true)
-                tapHelper.onResume()
-
-            }
-            if (it == Finished.TEST)
-                nextRoundAlert()
         }
     }
 
@@ -191,6 +201,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //Layout observer
     private fun setupExplicitCaseObserver() {
         viewModel.currentScenario.observe(this) { scenario ->
             scenario?.ScenarioCase?.let { scenarioCase ->
@@ -200,25 +211,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupNavigation() {
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
-        navController = navHostFragment.navController
-        supportActionBar?.hide()
+    //next scenario i.e. folded or unfolded
+    private fun setUpNextRoundObserver() {
+        viewModel.finished.observe(this) {
+            if (it == Finished.SCENARIO)
+                nextScenarioAlert()
+
+            if (it == Finished.TEST)
+                nextRoundAlert()
+        }
     }
 
-    //gets view width after its completely inflated
-    private fun setScale() {
-        binding.surfaceview.viewTreeObserver.addOnGlobalLayoutListener(object :
-            ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                // Ensure this only happens once
-                binding.surfaceview.viewTreeObserver.removeOnGlobalLayoutListener(this)
+    /**
+     * Alerts
+     */
+    private fun nextScenarioAlert() {
+        renderer.deleteAnchor()
+        viewModel.resetTargetIndex()
+        renderer.resetReached()
 
-                // Now that the view is fully laid out, set the scale factor
-                viewModel.setScaleFactor(binding.surfaceview)
-            }
-        })
+        Toast.makeText(
+            this,
+            "Scenario ${viewModel.currentScenario.value!!.ScenarioCase}. Platziere ein neues Objekt, um fortfahren zu können!",
+            Toast.LENGTH_LONG
+        ).show()
+
+        viewModel.setClickable(true)
+        tapHelper.onResume()
     }
 
     //shows alert if target is reached
@@ -242,6 +261,56 @@ class MainActivity : AppCompatActivity() {
                 dialogInterface.dismiss()
             }.setOnDismissListener { isAlertDialogOpen = false }
             .show()
+    }
+
+    /**
+     * Layout
+     */
+    private fun selectLayout(scenarioCase: Scenarios) {
+        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val height = displayMetrics.heightPixels
+
+        if (scenarioCase == Scenarios.STATEOFTHEART) {
+            navHostFragment.let { fragment ->
+                supportFragmentManager.beginTransaction().detach(fragment).commit()
+            }
+            setFoldARLayout(height)
+        } else {
+            navHostFragment.let { fragment ->
+                supportFragmentManager.beginTransaction().attach(fragment).commit()
+            }
+            setFoldARLayout(height / 2)
+        }
+    }
+
+    private fun setFoldARLayout(height: Int) {
+
+        val layoutParams = binding.surfaceview.layoutParams as ConstraintLayout.LayoutParams
+        layoutParams.height = height
+        layoutParams.width = ConstraintLayout.LayoutParams.MATCH_PARENT
+        binding.surfaceview.layoutParams = layoutParams
+
+        binding.surfaceview.requestLayout()
+        viewModel.setDimension(height)
+    }
+
+    /**
+     * Layout dimensions for object manipulation
+     */
+    //gets view width after its completely inflated
+    private fun setScale() {
+        binding.surfaceview.viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                // Ensure this only happens once
+                binding.surfaceview.viewTreeObserver.removeOnGlobalLayoutListener(this)
+
+                // Now that the view is fully laid out, set the scale factor
+                viewModel.setScaleFactor(binding.surfaceview)
+            }
+        })
     }
 
     /**
@@ -338,51 +407,6 @@ class MainActivity : AppCompatActivity() {
             }.setNegativeButton(R.string.button_text_disable_depth) { _, _ ->
                 this.depthSettings.setUseDepthForOcclusion(false)
             }.show()
-    }
-
-    //start scenario button
-    private fun setupButtons() {
-
-        binding.settingsButton.apply {
-            //wait until db is set
-            isClickable = false
-
-            setOnClickListener {
-                if (!viewModel.clickable.value!!)
-                    renderer.reachedTrue()
-                else
-                    DialogObjectOptions.newInstance().show(supportFragmentManager, "")
-            }
-        }
-    }
-
-    private fun selectLayout(scenarioCase: Scenarios) {
-        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        val displayMetrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(displayMetrics)
-        val height = displayMetrics.heightPixels
-
-
-        if (scenarioCase == Scenarios.STATEOFTHEART) {
-            Log.d(TAG, "$scenarioCase")
-//            val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
-//            navHostFragment.let { fragment ->
-//                supportFragmentManager.beginTransaction().detach(fragment!!).commit()
-//            }
-//            setFoldARLayout(height)
-        } else
-            setFoldARLayout(height / 2)
-    }
-
-    private fun setFoldARLayout(height: Int) {
-
-        val layoutParams = binding.surfaceview.layoutParams as ConstraintLayout.LayoutParams
-        layoutParams.height = height
-        layoutParams.width = ConstraintLayout.LayoutParams.MATCH_PARENT
-        binding.surfaceview.layoutParams = layoutParams
-
-        binding.surfaceview.requestLayout()
-        viewModel.setDimension(height)
     }
 
     override fun onResume() {
