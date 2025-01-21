@@ -382,7 +382,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
         // Visualize anchors created by touch.
         render.clear(virtualSceneFramebuffer, 0f, 0f, 0f, 0f)
-        wrappedAnchors.filterIndexed { index, (anchor, trackable) ->
+        wrappedAnchors.filter { (anchor, _) ->
             anchor.trackingState == TrackingState.TRACKING
         }.forEachIndexed { index, (anchor, trackable) ->
             // Get the current pose of an Anchor in world space. The Anchor pose is updated
@@ -400,11 +400,10 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
                 if ((trackable as? InstantPlacementPoint)?.trackingMethod == InstantPlacementPoint.TrackingMethod.SCREENSPACE_WITH_APPROXIMATE_DISTANCE) {
                     virtualObjectAlbedoInstantPlacementTexture
                 } else {
-                    when (index) {
-                        1 -> virtualObjectAlbedoTexture
-                        2 -> virtualObjectAlbedoTextureAlt
-                        else -> virtualObjectAlbedoTextureAlt
-                    }
+                    if (index % 2 == 0) {
+                        virtualObjectAlbedoTexture
+                    } else
+                        virtualObjectAlbedoTextureAlt
                 }
             virtualObjectShader.setTexture("u_AlbedoTexture", texture)
             render.draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
