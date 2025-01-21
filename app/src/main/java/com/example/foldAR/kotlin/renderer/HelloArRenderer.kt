@@ -139,6 +139,8 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     val displayRotationHelper = DisplayRotationHelper(activity)
     val trackingStateHelper = TrackingStateHelper(activity)
 
+    private var color = true
+
     override fun onResume(owner: LifecycleOwner) {
         displayRotationHelper.onResume()
         hasSetTextureNames = false
@@ -149,6 +151,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     }
 
     override fun onSurfaceCreated(render: SampleRender) {
+
         // Prepare the rendering objects.
         // This involves reading shaders and 3D model files, so may throw an IOException.
         try {
@@ -202,27 +205,39 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             )
 
             // Virtual object to render (ARCore pawn)
-            virtualObjectAlbedoTexture = Texture.createFromAsset(
-                render,
-                "models/pawn_albedo.png",
-                Texture.WrapMode.CLAMP_TO_EDGE,
-                Texture.ColorFormat.SRGB
-            )
+            if (color) {
+                virtualObjectAlbedoTexture = Texture.createFromAsset(
+                    render,
+                    "models/cube/manipulated_cube_albedo.png",
+                    Texture.WrapMode.CLAMP_TO_EDGE,
+                    Texture.ColorFormat.SRGB
+                )
+                color = false
+            } else {
+                virtualObjectAlbedoTexture = Texture.createFromAsset(
+                    render,
+                    "models/cube/target_cube_albedo.png",
+                    Texture.WrapMode.CLAMP_TO_EDGE,
+                    Texture.ColorFormat.SRGB
+                )
+                color = false
+            }
 
             virtualObjectAlbedoInstantPlacementTexture = Texture.createFromAsset(
                 render,
-                "models/pawn_albedo_instant_placement.png",
+                "models/cube/manipulated_cube_transparent_albedo.png",
                 Texture.WrapMode.CLAMP_TO_EDGE,
                 Texture.ColorFormat.SRGB
             )
 
             val virtualObjectPbrTexture = Texture.createFromAsset(
                 render,
-                "models/pawn_roughness_metallic_ao.png",
+                "models/cube/cube_metallic_alt_albedo.png",
                 Texture.WrapMode.CLAMP_TO_EDGE,
                 Texture.ColorFormat.LINEAR
             )
-            virtualObjectMesh = Mesh.createFromAsset(render, "models/pawn.obj")
+            virtualObjectMesh =
+                Mesh.createFromAsset(render, "models/cube/manipulated_cube_transparent.obj")
             virtualObjectShader = Shader.createFromAssets(
                 render,
                 "shaders/environmental_hdr.vert",

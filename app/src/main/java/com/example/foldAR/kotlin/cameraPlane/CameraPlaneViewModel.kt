@@ -3,6 +3,7 @@ package com.example.foldAR.kotlin.cameraPlane
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Color.TRANSPARENT
 import android.graphics.Paint
 import android.view.MotionEvent
 import android.view.View
@@ -98,7 +99,7 @@ class CameraPlaneViewModel : ViewModel() {
         this.camPosX = camera.pose.translation[0]
         this.camPosZ = camera.pose.translation[2]
 
-        bitmap.eraseColor(Color.TRANSPARENT)
+        bitmap.eraseColor(TRANSPARENT)
 
         val mutex = Mutex()
 
@@ -182,7 +183,7 @@ class CameraPlaneViewModel : ViewModel() {
     }
 
     fun drawCoordinateSystem(): Bitmap {
-        bitmapCoordinateSystem.eraseColor(Color.TRANSPARENT)
+        bitmapCoordinateSystem.eraseColor(TRANSPARENT)
         val canvas = Canvas(bitmapCoordinateSystem)
 
 
