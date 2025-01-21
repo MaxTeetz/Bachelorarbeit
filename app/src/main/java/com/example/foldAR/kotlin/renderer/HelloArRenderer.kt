@@ -104,6 +104,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     lateinit var virtualObjectMesh: Mesh
     lateinit var virtualObjectShader: Shader
     lateinit var virtualObjectAlbedoTexture: Texture
+    lateinit var virtualObjectAlbedoTextureAlt: Texture
     lateinit var virtualObjectAlbedoInstantPlacementTexture: Texture
 
     lateinit var secondAnchor: WrappedAnchor
@@ -138,8 +139,6 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
     val displayRotationHelper = DisplayRotationHelper(activity)
     val trackingStateHelper = TrackingStateHelper(activity)
-
-    private var color = true
 
     override fun onResume(owner: LifecycleOwner) {
         displayRotationHelper.onResume()
@@ -205,23 +204,19 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             )
 
             // Virtual object to render (ARCore pawn)
-            if (color) {
-                virtualObjectAlbedoTexture = Texture.createFromAsset(
-                    render,
-                    "models/cube/manipulated_cube_albedo.png",
-                    Texture.WrapMode.CLAMP_TO_EDGE,
-                    Texture.ColorFormat.SRGB
-                )
-                color = false
-            } else {
-                virtualObjectAlbedoTexture = Texture.createFromAsset(
-                    render,
-                    "models/cube/target_cube_albedo.png",
-                    Texture.WrapMode.CLAMP_TO_EDGE,
-                    Texture.ColorFormat.SRGB
-                )
-                color = false
-            }
+            virtualObjectAlbedoTexture = Texture.createFromAsset(
+                render,
+                "models/cube/manipulated_cube_albedo.png",
+                Texture.WrapMode.CLAMP_TO_EDGE,
+                Texture.ColorFormat.SRGB
+            )
+
+            virtualObjectAlbedoTextureAlt = Texture.createFromAsset(
+                render,
+                "models/cube/target_cube_albedo.png",
+                Texture.WrapMode.CLAMP_TO_EDGE,
+                Texture.ColorFormat.SRGB
+            )
 
             virtualObjectAlbedoInstantPlacementTexture = Texture.createFromAsset(
                 render,
@@ -387,7 +382,9 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
         // Visualize anchors created by touch.
         render.clear(virtualSceneFramebuffer, 0f, 0f, 0f, 0f)
-        for ((anchor, trackable) in wrappedAnchors.filter { it.anchor.trackingState == TrackingState.TRACKING }) {
+        wrappedAnchors.filterIndexed { index, (anchor, trackable) ->
+            anchor.trackingState == TrackingState.TRACKING
+        }.forEachIndexed { index, (anchor, trackable) ->
             // Get the current pose of an Anchor in world space. The Anchor pose is updated
             // during calls to session.update() as ARCore refines its estimate of the world.
             anchor.pose.toMatrix(modelMatrix, 0)
@@ -403,7 +400,11 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
                 if ((trackable as? InstantPlacementPoint)?.trackingMethod == InstantPlacementPoint.TrackingMethod.SCREENSPACE_WITH_APPROXIMATE_DISTANCE) {
                     virtualObjectAlbedoInstantPlacementTexture
                 } else {
-                    virtualObjectAlbedoTexture
+                    when (index) {
+                        1 -> virtualObjectAlbedoTexture
+                        2 -> virtualObjectAlbedoTextureAlt
+                        else -> virtualObjectAlbedoTextureAlt
+                    }
                 }
             virtualObjectShader.setTexture("u_AlbedoTexture", texture)
             render.draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
