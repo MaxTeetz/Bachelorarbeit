@@ -3,6 +3,7 @@ package com.example.foldAR.kotlin.renderer
 import android.opengl.GLES30
 import android.opengl.Matrix
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
@@ -113,6 +114,8 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
     private var _reached: MutableLiveData<Boolean> = MutableLiveData(false)
     val reached get() = _reached
+
+    private var done = true
 
     private var _distance: Float = 0f
     val distance get() = _distance
@@ -551,6 +554,13 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             } catch (e: Exception) {
                 Log.e("MoveAnchor", "Failed to create new Anchor", e)
             }
+
+            calculateDistance()
+            if (this.distance < 0.3 && done) {
+                Log.d(TAG, "Yes")
+                Toast.makeText(activity, "Done", Toast.LENGTH_LONG).show()
+                done = false
+            }
         }
     }
 
@@ -565,6 +575,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     fun reachedTrue() {
         calculateDistance()
         _reached.value = true
+        done = true
     }
 
     fun resetReached() {
@@ -603,6 +614,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
     private fun showError(errorMessage: String) =
         activity.snackbarHelper.showError(activity, errorMessage)
+
 }
 
 /**
