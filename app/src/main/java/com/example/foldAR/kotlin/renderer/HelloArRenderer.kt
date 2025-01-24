@@ -102,11 +102,12 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     var lastPointCloudTimestamp: Long = 0
 
     // Virtual object (ARCore pawn)
-    lateinit var virtualObjectMesh: Mesh
-    lateinit var virtualObjectShader: Shader
-    lateinit var virtualObjectAlbedoTexture: Texture
-    lateinit var virtualObjectAlbedoTextureAlt: Texture
-    lateinit var virtualObjectAlbedoInstantPlacementTexture: Texture
+    private lateinit var virtualObjectMesh: Mesh
+    private lateinit var virtualObjectShader: Shader
+    private lateinit var virtualObjectAlbedoTexture: Texture
+    private lateinit var virtualObjectAlbedoTextureAlt: Texture
+    private lateinit var virtualObjectAlbedoTextureFinish: Texture
+    private lateinit var virtualObjectAlbedoInstantPlacementTexture: Texture
 
     lateinit var secondAnchor: WrappedAnchor
 
@@ -117,7 +118,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
     private var done = true
 
-    private var _distance: Float = 0f
+    private var _distance: Float = 10f
     val distance get() = _distance
 
     // Environmental HDR
@@ -217,6 +218,13 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             virtualObjectAlbedoTextureAlt = Texture.createFromAsset(
                 render,
                 "models/cube/target_cube_albedo.png",
+                Texture.WrapMode.CLAMP_TO_EDGE,
+                Texture.ColorFormat.SRGB
+            )
+
+            virtualObjectAlbedoTextureFinish = Texture.createFromAsset(
+                render,
+                "models/cube/target_cube_finish_albedo.png",
                 Texture.WrapMode.CLAMP_TO_EDGE,
                 Texture.ColorFormat.SRGB
             )
@@ -371,12 +379,12 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
         }
 
         // Visualize planes.
-        planeRenderer.drawPlanes(
-            render,
-            session.getAllTrackables<Plane>(Plane::class.java),
-            camera.displayOrientedPose,
-            projectionMatrix
-        )
+//        planeRenderer.drawPlanes(
+//            render,
+//            session.getAllTrackables<Plane>(Plane::class.java),
+//            camera.displayOrientedPose,
+//            projectionMatrix
+//        )
 
         // -- Draw occluded virtual objects
 
@@ -399,14 +407,19 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             // Update shader properties and draw
             virtualObjectShader.setMat4("u_ModelView", modelViewMatrix)
             virtualObjectShader.setMat4("u_ModelViewProjection", modelViewProjectionMatrix)
+            Log.d(TAG, "TextureTest")
             val texture =
                 if ((trackable as? InstantPlacementPoint)?.trackingMethod == InstantPlacementPoint.TrackingMethod.SCREENSPACE_WITH_APPROXIMATE_DISTANCE) {
                     virtualObjectAlbedoInstantPlacementTexture
                 } else {
                     if (index % 2 == 0) {
                         virtualObjectAlbedoTexture
-                    } else
-                        virtualObjectAlbedoTextureAlt
+                    } else {
+                        if (done)
+                            virtualObjectAlbedoTextureAlt
+                        else
+                            virtualObjectAlbedoTextureFinish
+                    }
                 }
             virtualObjectShader.setTexture("u_AlbedoTexture", texture)
             render.draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
@@ -555,8 +568,10 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
                 Log.e("MoveAnchor", "Failed to create new Anchor", e)
             }
 
-            calculateDistance()
-            if (this.distance < 0.3 && done) {
+            if (wrappedAnchors.size >= 2)
+                calculateDistance()
+
+            if (this.distance < 0.1 && done) {
                 Log.d(TAG, "Yes")
                 Toast.makeText(activity, "Done", Toast.LENGTH_LONG).show()
                 done = false
@@ -573,7 +588,6 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     }
 
     fun reachedTrue() {
-        calculateDistance()
         _reached.value = true
         done = true
     }

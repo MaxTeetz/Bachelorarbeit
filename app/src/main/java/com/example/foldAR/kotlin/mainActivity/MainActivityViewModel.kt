@@ -13,14 +13,18 @@ import com.example.foldAR.data.entities.User
 import com.example.foldAR.kotlin.constants.Constants
 import com.example.foldAR.kotlin.constants.Finished
 import com.example.foldAR.kotlin.constants.ObjectCoords
+import com.example.foldAR.kotlin.constants.PositioningCase
 import com.example.foldAR.kotlin.constants.ScenarioOrder
 import com.example.foldAR.kotlin.constants.Scenarios
 import com.example.foldAR.kotlin.renderer.HelloArRenderer
 import com.google.ar.core.Pose
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 
 /**The viewModel handles the renderer as well as the delegation of the calculated data inside
@@ -49,8 +53,18 @@ class MainActivityViewModel : ViewModel() {
     private var _dataBaseObjectsSet: MutableLiveData<Boolean> = MutableLiveData(false)
     val dataBaseObjectsSet get() = _dataBaseObjectsSet
 
+    //Dialog variables
     private var _finished: MutableLiveData<Finished> = MutableLiveData(Finished.NOTFINISHED)
     val finished get() = _finished
+
+    private lateinit var _startingPosition: Pose
+    val startingPosition get() = _startingPosition
+
+    private var _startingDegree: Float = 0f
+    val startingDegree = _startingDegree
+
+    private val maxDistance = 0.5
+    private val maxRotation = 20f
 
     //set false if new ui is loaded
     fun setDatabaseObjectsSet(case: Boolean) {
@@ -454,5 +468,27 @@ class MainActivityViewModel : ViewModel() {
                 )
             }
         }
+    }
+
+    fun setStartingVariables() {
+
+        this._startingPosition = renderer.camera.value!!.pose
+        this._startingDegree = rotation
+    }
+
+    fun checkCorrectUserPosition(): PositioningCase {
+        val a = startingPosition
+        val b = renderer.camera.value!!.pose
+
+        val distance =
+            sqrt((b.tx() - a.tx()).pow(2) + (b.ty() - a.ty()).pow(2) + (b.tz() - a.tz()).pow(2))
+        val rotationDifference = abs(startingDegree - rotation)
+
+        if (distance < maxDistance)
+            return PositioningCase.DISTANCE
+        if (rotationDifference < maxRotation)
+            return PositioningCase.DEGREE
+
+        return PositioningCase.CORRECT
     }
 }

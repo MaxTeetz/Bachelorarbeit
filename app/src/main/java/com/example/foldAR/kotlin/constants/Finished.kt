@@ -5,3 +5,9 @@ enum class Finished {
     SCENARIO,
     NOTFINISHED
 }
+
+enum class PositioningCase{
+    DISTANCE,
+    DEGREE,
+    CORRECT
+}

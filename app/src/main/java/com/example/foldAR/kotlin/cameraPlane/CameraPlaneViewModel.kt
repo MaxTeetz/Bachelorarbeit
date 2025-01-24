@@ -95,6 +95,8 @@ class CameraPlaneViewModel : ViewModel() {
         refreshAngle: Float,
     ): Bitmap {
 
+        if (wrappedAnchors.isEmpty()) return combineBitmaps()
+
         this.rotation = refreshAngle
         this.camPosX = camera.pose.translation[0]
         this.camPosZ = camera.pose.translation[2]
@@ -103,18 +105,17 @@ class CameraPlaneViewModel : ViewModel() {
 
         val mutex = Mutex()
 
-        val wrappedAnchorsCopy = wrappedAnchors.toList()
+        val anchor = wrappedAnchors[0].anchor
 
+        //Todo necessary
         mutex.withLock {
-            wrappedAnchorsCopy.withIndex()
-                .forEach {
-                    val anchorPose = it.value.anchor.pose
-                    val (anchorPoseX, anchorPoseZ) = arrayOf(anchorPose.tx(), anchorPose.tz())
 
-                    if (isInRange(anchorPoseX, anchorPoseZ, camPosX, camPosZ)) {
-                        drawPoint(anchorPoseX, anchorPoseZ, it.index)
-                    }
-                }
+            val anchorPose = anchor.pose
+            val (anchorPoseX, anchorPoseZ) = arrayOf(anchorPose.tx(), anchorPose.tz())
+
+            if (isInRange(anchorPoseX, anchorPoseZ, camPosX, camPosZ)) {
+                drawPoint(anchorPoseX, anchorPoseZ, 0)
+            }
 
             return combineBitmaps()
         }
