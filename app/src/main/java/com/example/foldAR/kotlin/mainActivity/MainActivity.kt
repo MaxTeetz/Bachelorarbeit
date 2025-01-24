@@ -5,7 +5,6 @@ import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
-import android.view.Gravity
 import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.widget.Toast
@@ -26,14 +25,13 @@ import com.example.foldAR.java.helpers.SnackbarHelper
 import com.example.foldAR.java.helpers.TapHelper
 import com.example.foldAR.java.samplerender.SampleRender
 import com.example.foldAR.kotlin.constants.Finished
-import com.example.foldAR.kotlin.constants.PositioningCase
 import com.example.foldAR.kotlin.constants.Scenarios
+import com.example.foldAR.kotlin.dialog.DialogNextRound
 import com.example.foldAR.kotlin.dialog.DialogObjectOptions
 import com.example.foldAR.kotlin.helloar.R
 import com.example.foldAR.kotlin.helloar.databinding.ActivityMainBinding
 import com.example.foldAR.kotlin.helpers.ARCoreSessionLifecycleHelper
 import com.example.foldAR.kotlin.renderer.HelloArRenderer
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.ar.core.Config
 import com.google.ar.core.Config.InstantPlacementMode
 import com.google.ar.core.Session
@@ -244,44 +242,11 @@ class MainActivity : AppCompatActivity() {
 
     //shows alert if target is reached
     private fun nextRoundAlert() {
-        if (isAlertDialogOpen) {
-            return
-        }
-        isAlertDialogOpen = true
+        if (viewModel.isAlertDialogOpen) return
 
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setTitle(getString(android.R.string.dialog_alert_title))
-            .setMessage("Nächste Runde ${viewModel.targetIndex.value}/20")
-            .setCancelable(false)
-            .setPositiveButton("Nächste Runde") { dialogInterface, _ -> //Todo disable reached until both are placed
-                if (viewModel.checkCorrectUserPosition() == PositioningCase.CORRECT) {
-                    if (renderer.wrappedAnchors.isNotEmpty()) {
-                        viewModel.placeTargetOnNewPosition()
-                        viewModel.placeObjectInFocus()
-                        renderer.resetReached()
-                        viewModel.updateTestCaseStartTime()
-                    }
-                    dialogInterface.dismiss()
-                } else
-                    Toast.makeText(
-                        this,
-                        "Bitte zum Start zurückkehren und richtig ausrichten",
-                        Toast.LENGTH_LONG
-                    ).show()
-            }.setOnDismissListener { isAlertDialogOpen = false }
-            .create()
+        viewModel.setIsAlertDialogOpen(true)
 
-        dialog.apply {
-            val window = dialog.window
-            window?.setGravity(Gravity.TOP)
-
-            val layoutParams = WindowManager.LayoutParams()
-            layoutParams.copyFrom(window?.attributes)
-
-            layoutParams.y = 100
-            window?.attributes = layoutParams
-        }
-        dialog.show()
+        DialogNextRound.newInstance().show(supportFragmentManager, "")
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.example.foldAR.kotlin.mainActivity
 
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.lifecycle.MutableLiveData
@@ -13,7 +14,6 @@ import com.example.foldAR.data.entities.User
 import com.example.foldAR.kotlin.constants.Constants
 import com.example.foldAR.kotlin.constants.Finished
 import com.example.foldAR.kotlin.constants.ObjectCoords
-import com.example.foldAR.kotlin.constants.PositioningCase
 import com.example.foldAR.kotlin.constants.ScenarioOrder
 import com.example.foldAR.kotlin.constants.Scenarios
 import com.example.foldAR.kotlin.renderer.HelloArRenderer
@@ -57,14 +57,17 @@ class MainActivityViewModel : ViewModel() {
     private var _finished: MutableLiveData<Finished> = MutableLiveData(Finished.NOTFINISHED)
     val finished get() = _finished
 
+    private var _isAlertDialogOpen: Boolean = false
+    val isAlertDialogOpen get() = _isAlertDialogOpen
+
     private lateinit var _startingPosition: Pose
-    val startingPosition get() = _startingPosition
+    private val startingPosition get() = _startingPosition
 
     private var _startingDegree: Float = 0f
-    val startingDegree = _startingDegree
+    private val startingDegree get() = _startingDegree
 
     private val maxDistance = 0.5
-    private val maxRotation = 20f
+    private val maxRotation = 0.349065f
 
     //set false if new ui is loaded
     fun setDatabaseObjectsSet(case: Boolean) {
@@ -121,6 +124,10 @@ class MainActivityViewModel : ViewModel() {
 
     fun setRotationAngle() {
         this.rotation = renderer.refreshAngle()
+    }
+
+    fun setIsAlertDialogOpen(b: Boolean) {
+        this._isAlertDialogOpen = b
     }
 
     fun setScaleFactor(view: View) {
@@ -476,7 +483,7 @@ class MainActivityViewModel : ViewModel() {
         this._startingDegree = rotation
     }
 
-    fun checkCorrectUserPosition(): PositioningCase {
+    fun checkCorrectUserPosition(): String {
         val a = startingPosition
         val b = renderer.camera.value!!.pose
 
@@ -484,11 +491,13 @@ class MainActivityViewModel : ViewModel() {
             sqrt((b.tx() - a.tx()).pow(2) + (b.ty() - a.ty()).pow(2) + (b.tz() - a.tz()).pow(2))
         val rotationDifference = abs(startingDegree - rotation)
 
-        if (distance < maxDistance)
-            return PositioningCase.DISTANCE
-        if (rotationDifference < maxRotation)
-            return PositioningCase.DEGREE
+        Log.d(TAG, "Distanz: $distance      Rotation: $rotationDifference")
 
-        return PositioningCase.CORRECT
+        if (distance > maxDistance)
+            return "Distanz $distance"
+        if (rotationDifference > maxRotation)
+            return "Ausrichtung $rotationDifference"
+
+        return ""
     }
 }
