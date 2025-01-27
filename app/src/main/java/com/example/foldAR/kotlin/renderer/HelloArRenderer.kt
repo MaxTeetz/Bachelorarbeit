@@ -112,6 +112,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     lateinit var secondAnchor: WrappedAnchor
 
     val wrappedAnchors = Collections.synchronizedList(mutableListOf<WrappedAnchor>())
+    private lateinit var idFirstAnchor: UUID
 
     private var _reached: MutableLiveData<Boolean> = MutableLiveData(false)
     val reached get() = _reached
@@ -395,7 +396,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
         render.clear(virtualSceneFramebuffer, 0f, 0f, 0f, 0f)
         wrappedAnchors.filter { (anchor, _) ->
             anchor.trackingState == TrackingState.TRACKING
-        }.forEachIndexed { index, (anchor, trackable) ->
+        }.forEach { (anchor, trackable, id) ->
             // Get the current pose of an Anchor in world space. The Anchor pose is updated
             // during calls to session.update() as ARCore refines its estimate of the world.
             anchor.pose.toMatrix(modelMatrix, 0)
@@ -412,7 +413,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
                 if ((trackable as? InstantPlacementPoint)?.trackingMethod == InstantPlacementPoint.TrackingMethod.SCREENSPACE_WITH_APPROXIMATE_DISTANCE) {
                     virtualObjectAlbedoInstantPlacementTexture
                 } else {
-                    if (index % 2 == 0) {
+                    if (id == idFirstAnchor) {
                         virtualObjectAlbedoTexture
                     } else {
                         if (done)
@@ -528,6 +529,9 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             secondAnchor = WrappedAnchor(firstHitResult.createAnchor(), firstHitResult.trackable)
 
             wrappedAnchors.add(anchor)
+            if (wrappedAnchors.size == 1)
+                idFirstAnchor = anchor.id
+
             // For devices that support the Depth API, shows a dialog to suggest enabling
             // depth-based occlusion. This dialog needs to be spawned on the UI thread.
             activity.runOnUiThread { activity.showOcclusionDialogIfNeeded() }
@@ -540,6 +544,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
         wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
 
             val rotationQuaternion = wrappedAnchors[position].anchor.pose.rotationQuaternion
+            val id = wrappedAnchors[position].id
             //combine new position and rotation
             val translation = Pose.makeTranslation(moveX, moveY, moveZ)
             val rotation = Pose.makeRotation(
@@ -558,7 +563,8 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
                     val newAnchor =
                         WrappedAnchor(
                             session!!.createAnchor(newPose),
-                            wrappedAnchors[position].trackable
+                            wrappedAnchors[position].trackable,
+                            id
                         )
 
                     wrappedAnchors[position] = newAnchor
@@ -638,5 +644,5 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 data class WrappedAnchor(
     val anchor: Anchor,
     val trackable: Trackable,
-    val id: UUID = UUID.randomUUID()
+    val id: UUID = UUID.randomUUID(),
 )
