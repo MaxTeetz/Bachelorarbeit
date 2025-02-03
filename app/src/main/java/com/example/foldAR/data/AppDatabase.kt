@@ -5,22 +5,29 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.foldAR.data.daos.DataSetsDAO
+import com.example.foldAR.data.daos.MotionEventsDAO
 import com.example.foldAR.data.daos.ScenariosDAO
 import com.example.foldAR.data.daos.TestCaseDAO
 import com.example.foldAR.data.daos.UsersDAO
+import com.example.foldAR.data.entities.DataMotionEvents
 import com.example.foldAR.data.entities.DataSet
 import com.example.foldAR.data.entities.Scenario
 import com.example.foldAR.data.entities.TestCase
 import com.example.foldAR.data.entities.User
 
-@Database(entities = [User::class, Scenario::class, TestCase::class, DataSet::class], version = 5, exportSchema = false)
-abstract class AppDatabase : RoomDatabase(){
+@Database(
+    entities = [User::class, Scenario::class, TestCase::class, DataSet::class, DataMotionEvents::class],
+    version = 9,
+    exportSchema = false
+)
+abstract class AppDatabase : RoomDatabase() {
     abstract fun usersDao(): UsersDAO
     abstract fun scenariosDao(): ScenariosDAO
     abstract fun testCasesDao(): TestCaseDAO
     abstract fun dataSetsDao(): DataSetsDAO
+    abstract fun motionEventsDao(): MotionEventsDAO
 
-    companion object{
+    companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -32,6 +39,7 @@ abstract class AppDatabase : RoomDatabase(){
                     "app_database"
                 )
                     .fallbackToDestructiveMigration()
+                    .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING)
                     .build()
                 INSTANCE = instance
                 return instance

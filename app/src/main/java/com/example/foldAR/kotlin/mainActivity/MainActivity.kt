@@ -66,9 +66,6 @@ class MainActivity : AppCompatActivity() {
     val depthSettings = DepthSettings()
 
 
-    private var isAlertDialogOpen = false
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
@@ -77,8 +74,9 @@ class MainActivity : AppCompatActivity() {
         val scenariosDAO = (application as DatabaseApplication).database.scenariosDao()
         val testCaseDAO = (application as DatabaseApplication).database.testCasesDao()
         val dataSetsDAO = (application as DatabaseApplication).database.dataSetsDao()
+        val motionEventsDAO = (application as DatabaseApplication).database.motionEventsDao()
 
-        val factory = DatabaseViewModelFactory(usersDAO, scenariosDAO, testCaseDAO, dataSetsDAO)
+        val factory = DatabaseViewModelFactory(usersDAO, scenariosDAO, testCaseDAO, dataSetsDAO, motionEventsDAO)
 
         databaseViewModel = ViewModelProvider(this, factory)[DatabaseViewModel::class.java]
 
@@ -196,7 +194,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpFrameObserver() {
         renderer.camera.observe(this) {
-            viewModel.insertDataSet()
+            val time = System.currentTimeMillis()
+            viewModel.insertDataSet(time)
+            viewModel.insertMotionEvent(time)
             viewModel.setRotationAngle()
         }
     }

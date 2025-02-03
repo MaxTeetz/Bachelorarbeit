@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foldAR.data.daos.DataSetsDAO
+import com.example.foldAR.data.daos.MotionEventsDAO
 import com.example.foldAR.data.daos.ScenariosDAO
 import com.example.foldAR.data.daos.TestCaseDAO
 import com.example.foldAR.data.daos.UsersDAO
+import com.example.foldAR.data.entities.DataMotionEvents
 import com.example.foldAR.data.entities.DataSet
 import com.example.foldAR.data.entities.Scenario
 import com.example.foldAR.data.entities.TestCase
@@ -19,7 +21,8 @@ class DatabaseViewModel(
     private val usersDAO: UsersDAO,
     private val scenariosDAO: ScenariosDAO,
     private val testCaseDAO: TestCaseDAO,
-    private val dataSetsDAO: DataSetsDAO
+    private val dataSetsDAO: DataSetsDAO,
+    private val motionEventsDAO: MotionEventsDAO
 ) : ViewModel() {
 
     suspend fun insertUser(user: User) {
@@ -35,9 +38,15 @@ class DatabaseViewModel(
         testCaseDAO.insertTestCase(testCase)
     }
 
-    fun insertDataSet(dataSet: DataSet) {
-        viewModelScope.launch {
-            dataSetsDAO.insertDataSet(dataSet)
+    fun insertDataSets(list: List<DataSet>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataSetsDAO.insertDataSets(list)
+        }
+    }
+
+    fun insertMotionEventData(motionEventData: DataMotionEvents) {
+        viewModelScope.launch(Dispatchers.IO) {
+            motionEventsDAO.insertMotionEventData(motionEventData)
         }
     }
 
@@ -60,6 +69,12 @@ class DatabaseViewModel(
         }
     }
 
+    fun deleteMotionEventData(testCaseId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            motionEventsDAO.deleteMotionEventsDataForTestCase(testCaseId)
+        }
+    }
+
     suspend fun getLastScenarioByUserId(userId: Int): Scenario? {
         return withContext(Dispatchers.IO) {
             scenariosDAO.getLastScenarioOfUser(userId)
@@ -70,16 +85,24 @@ class DatabaseViewModel(
         usersDAO.updateUser(userId)
     }
 
-    suspend fun updateEndTime(currentTime: String, testCaseId: Int) {
+    suspend fun updateEndTime(currentTime: Long, testCaseId: Int) {
         testCaseDAO.updateEndTime(currentTime, testCaseId)
     }
 
-    suspend fun updateStartTime(currentTime: String, testCaseId: Int) {
+    suspend fun updateStartTime(currentTime: Long, testCaseId: Int) {
         testCaseDAO.updateStartTime(currentTime, testCaseId)
     }
 
     suspend fun updateDistance(distance: Float, testCaseId: Int) {
         testCaseDAO.updateDistance(distance, testCaseId)
+    }
+
+    suspend fun updateTimeReached(time: Long, testCaseId: Int) {
+        testCaseDAO.updateTimeReached(time, testCaseId)
+    }
+
+    suspend fun updateDistanceReached(distance: Float, testCaseId: Int) {
+        testCaseDAO.updateDistanceReached(distance, testCaseId)
     }
 }
 
@@ -87,12 +110,19 @@ class DatabaseViewModelFactory(
     private val usersDAO: UsersDAO,
     private val scenariosDAO: ScenariosDAO,
     private val testCaseDAO: TestCaseDAO,
-    private val dataSetsDAO: DataSetsDAO
+    private val dataSetsDAO: DataSetsDAO,
+    private val motionEventsDAO: MotionEventsDAO
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(DatabaseViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return DatabaseViewModel(usersDAO, scenariosDAO, testCaseDAO, dataSetsDAO) as T
+            return DatabaseViewModel(
+                usersDAO,
+                scenariosDAO,
+                testCaseDAO,
+                dataSetsDAO,
+                motionEventsDAO
+            ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

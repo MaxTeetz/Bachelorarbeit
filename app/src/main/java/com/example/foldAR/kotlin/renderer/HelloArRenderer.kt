@@ -3,7 +3,6 @@ package com.example.foldAR.kotlin.renderer
 import android.opengl.GLES30
 import android.opengl.Matrix
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
@@ -121,6 +120,12 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
     private var _distance: Float = 10f
     val distance get() = _distance
+
+    private var _timeDone: Long = 0
+    val timeDone get() = _timeDone
+
+    private var _distanceDone = 0f
+    val distanceDone get() = _distanceDone
 
     // Environmental HDR
     lateinit var dfgTexture: Texture
@@ -578,8 +583,8 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
                 calculateDistance()
 
             if (this.distance < 0.1 && done) {
-                Log.d(TAG, "Yes")
-                Toast.makeText(activity, "Done", Toast.LENGTH_LONG).show()
+                _timeDone = System.currentTimeMillis()
+                _distanceDone = distance
                 done = false
             }
         }

@@ -20,6 +20,7 @@ import com.example.foldAR.kotlin.renderer.HelloArRenderer
 import com.google.ar.core.Pose
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.pow
@@ -40,6 +41,7 @@ class MainActivityViewModel : ViewModel() {
     private lateinit var database: DatabaseViewModel
 
     private var update = false
+    private val dataSetList: CopyOnWriteArrayList<DataSet> = CopyOnWriteArrayList()
 
     private var _currentUser: MutableLiveData<User?> = MutableLiveData(null)
     val currentUser get() = _currentUser
@@ -52,6 +54,12 @@ class MainActivityViewModel : ViewModel() {
 
     private var _dataBaseObjectsSet: MutableLiveData<Boolean> = MutableLiveData(false)
     val dataBaseObjectsSet get() = _dataBaseObjectsSet
+
+    private var _currentMotionEventSurfaceView: MotionEvent? = null
+    val currentMotionEventSurfaceView get() = _currentMotionEventSurfaceView
+
+    private var _currentMotionEventMap: MotionEvent? = null
+    val currentMotionEventMap get() = _currentMotionEventMap
 
     //Dialog variables
     private var _finished: MutableLiveData<Finished> = MutableLiveData(Finished.NOTFINISHED)
@@ -342,6 +350,7 @@ class MainActivityViewModel : ViewModel() {
         } else {
             if (currentTestCase.value!!.EndTime == null) {
                 database.deleteDataSet(currentTestCase.value!!.TestCaseID)
+                database.deleteMotionEventData(currentTestCase.value!!.TestCaseID)
                 _targetIndex.value = currentTestCase.value!!.TestCaseName
 
                 //only true in case that its after app start and not in between rounds
@@ -404,7 +413,9 @@ class MainActivityViewModel : ViewModel() {
                 TestCaseName = targetIndex.value!! + 1,
                 StartTime = null,
                 EndTime = null,
-                Distance = null
+                Distance = null,
+                TimeReached = null,
+                DistanceReached = null
             )
 
             viewModelScope.launch(Dispatchers.IO) {
@@ -416,7 +427,7 @@ class MainActivityViewModel : ViewModel() {
 
     fun updateTestCaseEndTime() {
         update = false
-        val currentTime = System.currentTimeMillis().toString()
+        val currentTime = System.currentTimeMillis()
 
         viewModelScope.launch(Dispatchers.IO) {
 
@@ -424,6 +435,8 @@ class MainActivityViewModel : ViewModel() {
             currentTestCaseId?.let {
                 database.updateEndTime(currentTime, it)
                 database.updateDistance(renderer.distance, it)
+                database.updateTimeReached(renderer.timeDone, it)
+                database.updateDistanceReached(renderer.distanceDone, it)
                 _currentTestCase.postValue(database.getLastTestCaseOfScenario(currentScenario.value!!.ScenarioID))
             }
         }
@@ -431,7 +444,7 @@ class MainActivityViewModel : ViewModel() {
 
     fun updateTestCaseStartTime() {
 
-        val currentTime = System.currentTimeMillis().toString()
+        val currentTime = System.currentTimeMillis()
         update = true
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -447,33 +460,50 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-    fun insertDataSet() {
+    fun insertDataSet(time: Long) {
 
         if (update) {
             val camera = renderer.camera.value!!.pose
             val movingObject = renderer.wrappedAnchors[0].anchor.pose
             val targetObject = renderer.wrappedAnchors[1].anchor.pose
-            viewModelScope.launch(Dispatchers.IO) {
-                database.insertDataSet(
-                    DataSet(
-                        TestCaseID = currentTestCase.value!!.TestCaseID,
-                        Time = System.currentTimeMillis().toString(),
-                        CameraPositionX = camera.tx(),
-                        CameraPositionY = camera.ty(),
-                        CameraPositionZ = camera.tz(),
-                        CameraRoatationX = camera.qx(),
-                        CameraRoatationY = camera.ty(),
-                        CameraRoatationZ = camera.qz(),
-                        CameraRoatationW = camera.qw(),
-                        Location_ManipulatedObjectX = movingObject.tx(),
-                        Location_ManipulatedObjectY = movingObject.ty(),
-                        Location_ManipulatedObjectZ = movingObject.tz(),
-                        Location_TargetObjectX = targetObject.tx(),
-                        Location_TargetObjectY = targetObject.ty(),
-                        Location_TargetObjectZ = targetObject.tz(),
-                    )
+
+            dataSetList.add(
+                DataSet(
+                    TestCaseID = currentTestCase.value!!.TestCaseID,
+                    Time = time,
+                    CameraPositionX = camera.tx(),
+                    CameraPositionY = camera.ty(),
+                    CameraPositionZ = camera.tz(),
+                    CameraRoatationX = camera.qx(),
+                    CameraRoatationY = camera.ty(),
+                    CameraRoatationZ = camera.qz(),
+                    CameraRoatationW = camera.qw(),
+                    Location_ManipulatedObjectX = movingObject.tx(),
+                    Location_ManipulatedObjectY = movingObject.ty(),
+                    Location_ManipulatedObjectZ = movingObject.tz(),
+                    Location_TargetObjectX = targetObject.tx(),
+                    Location_TargetObjectY = targetObject.ty(),
+                    Location_TargetObjectZ = targetObject.tz(),
                 )
-            }
+            )
+        }
+
+        if (dataSetList.size >= 30 || (dataSetList.isNotEmpty() && !update)) {
+            insertDataSetToDatabase(dataSetList.toList())
+            Log.d(TAG, dataSetList.size.toString())
+            dataSetList.clear()
+        }
+    }
+
+    private fun insertDataSetToDatabase(list: List<DataSet>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.insertDataSets(list)
+        }
+    }
+
+    fun insertMotionEvent(time: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database
         }
     }
 

@@ -16,7 +16,7 @@ import androidx.room.PrimaryKey
 data class DataSet(
     @PrimaryKey(autoGenerate = true) val DataSetID: Int = 0,
     val TestCaseID: Int,
-    val Time: String,
+    val Time: Long,
     val CameraPositionX: Float,
     val CameraPositionY: Float,
     val CameraPositionZ: Float,

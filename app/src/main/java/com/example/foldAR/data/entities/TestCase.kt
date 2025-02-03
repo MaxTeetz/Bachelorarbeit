@@ -17,7 +17,9 @@ data class TestCase(
     @PrimaryKey(autoGenerate = true) val TestCaseID: Int = 0,
     val ScenarioID: Int,
     val TestCaseName: Int,
-    val StartTime: String?,
-    val EndTime: String?,
-    val Distance: Float?
+    val StartTime: Long?,
+    val EndTime: Long?,
+    val Distance: Float?,
+    val TimeReached: Long?,
+    val DistanceReached: Float?
 )

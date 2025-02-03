@@ -15,11 +15,17 @@ interface TestCaseDAO {
     suspend fun getLastTestCaseOfScenario(scenarioId: Int): TestCase?
 
     @Query("UPDATE TESTCASE SET EndTime = :endTime WHERE TestCaseID = :testCaseId")
-    suspend fun updateEndTime(endTime: String, testCaseId: Int)
+    suspend fun updateEndTime(endTime: Long, testCaseId: Int)
 
     @Query("UPDATE TESTCASE SET StartTime = :startTime WHERE TestCaseID = :testCaseId")
-    suspend fun updateStartTime(startTime: String, testCaseId: Int)
+    suspend fun updateStartTime(startTime: Long, testCaseId: Int)
 
     @Query("UPDATE TESTCASE SET Distance = :distance WHERE TestCaseID = :testCaseId")
     suspend fun updateDistance(distance: Float, testCaseId: Int)
+
+    @Query("UPDATE TESTCASE SET TimeReached = :timeReached WHERE TestCaseID = :testCaseId")
+    suspend fun updateTimeReached(timeReached: Long, testCaseId: Int)
+
+    @Query("UPDATE TESTCASE SET DistanceReached = :distanceReached WHERE TestCaseID = :testCaseId")
+    suspend fun updateDistanceReached(distanceReached: Float, testCaseId: Int)
 }

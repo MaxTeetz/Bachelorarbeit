@@ -3,9 +3,9 @@ package com.example.foldAR.kotlin.constants
 object ObjectCoords {
     val positions: List<Triple<Double, Double, Double>> = listOf(
         //First one is always to make the user get used to the scenario. Do NOT include into Data analysis
-        Triple(-1.3143673, -0.33581972, 0.16688621),
+        Triple(-1.0, -0.33581972, 1.000),
 
-        Triple(-1.3143673, -0.33581972, 0.16688621),
+        Triple(-1.3143673, 1.000, 1.0000),
         Triple(-2.4717073, -2.0517888, 0.69355404),
         Triple(1.5064988, -2.9863834, 0.79182816),
         Triple(-2.2603655, -0.91442704, 0.14062381),
