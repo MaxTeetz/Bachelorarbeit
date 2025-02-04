@@ -7,48 +7,46 @@ object ObjectCoords {
         Triple(-1.0, -0.0, -0.0),
 
         //Vorne
-        Triple(0.0, -3.0, 1.0),
+        Triple(0.0, -3.0, 0.0),
         //hinten
-        Triple(0.0, 3.0, 1.0),
-        //links
-        Triple(-3.0, 0.0, 1.0),
-        //rechts
-        Triple(3.0, 0.0, 1.0),
-        //vorne links
-        Triple(-3.0, -3.0, 1.0),
-        //vorne rechts
-        Triple(3.0, -3.0, 1.0),
+        Triple(0.0, 3.0, 0.0),
         //hinten links
-        Triple(-3.0, 3.0, 1.0),
-        //hinten rechts
-        Triple(3.0, 3.0, 1.0),
-
-
-        //Maximum -1 in der Höhe und Plus 1
-        //Vorne
-        Triple(0.0, -3.0, -1.0),
-        //hinten
-        Triple(0.0, 3.0, -1.0),
+        Triple(-2.0, 3.0, 0.5),
         //links
-        Triple(-3.0, 0.0, -1.0),
+        Triple(-3.0, 0.0, 0.0),
+        //links
+        Triple(-3.0, 0.0, -0.5),
         //rechts
-        Triple(3.0, 0.0, -1.0),
-        //vorne links
-        Triple(-3.0, -3.0, -1.0),
-        //vorne rechts
-        Triple(3.0, -3.0, -1.0),
-        //hinten links
-        Triple(-3.0, 3.0, -1.0),
-        //hinten rechts
-        Triple(3.0, 3.0, -1.0),
-
+        Triple(3.0, 0.0, 0.0),
         //Vorne rechts
-        Triple(2.0, -3.0, -0.0),
-        //hinten links
-        Triple(-2.0, 3.0, -0.0),
+        Triple(2.0, -3.0, 0.5),
         //vorne links
-        Triple(-2.0, -3.0, -0.0),
+        Triple(-3.0, -3.0, 0.0),
         //hinten rechts
-        Triple(2.0, 3.0, -0.0),
+        Triple(3.0, 3.0, -0.5),
+        //hinten rechts
+        Triple(2.0, 3.0, 0.5),
+        //rechts
+        Triple(3.0, 0.0, -0.5),
+        //vorne links
+        Triple(-2.0, -3.0, 0.5),
+        //vorne rechts
+        Triple(3.0, -3.0, 0.0),
+        //Vorne
+        Triple(0.0, -3.0, -0.5),
+        //hinten links
+        Triple(-3.0, 3.0, 0.0),
+        //hinten rechts
+        Triple(3.0, 3.0, 0.0),
+        //hinten
+        Triple(0.0, 3.0, -0.5),
+        //vorne links
+        Triple(-3.0, -3.0, -0.5),
+        //vorne rechts
+        Triple(3.0, -3.0, -0.5),
+        //hinten links
+        Triple(-3.0, 3.0, -0.5),
+
+
     )
 }
