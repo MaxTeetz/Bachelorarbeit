@@ -74,9 +74,10 @@ class MainActivity : AppCompatActivity() {
         val scenariosDAO = (application as DatabaseApplication).database.scenariosDao()
         val testCaseDAO = (application as DatabaseApplication).database.testCasesDao()
         val dataSetsDAO = (application as DatabaseApplication).database.dataSetsDao()
-        val motionEventsDAO = (application as DatabaseApplication).database.motionEventsDao()
+        val motionEventsFragmentDAO = (application as DatabaseApplication).database.motionEventsFragmentDAO()
+        val motionEventsGlSurfaceDAO = (application as DatabaseApplication).database.motionEventsGlSurfaceDAO()
 
-        val factory = DatabaseViewModelFactory(usersDAO, scenariosDAO, testCaseDAO, dataSetsDAO, motionEventsDAO)
+        val factory = DatabaseViewModelFactory(usersDAO, scenariosDAO, testCaseDAO, dataSetsDAO, motionEventsFragmentDAO, motionEventsGlSurfaceDAO)
 
         databaseViewModel = ViewModelProvider(this, factory)[DatabaseViewModel::class.java]
 
@@ -196,7 +197,6 @@ class MainActivity : AppCompatActivity() {
         renderer.camera.observe(this) {
             val time = System.currentTimeMillis()
             viewModel.insertDataSet(time)
-            viewModel.insertMotionEvent(time)
             viewModel.setRotationAngle()
         }
     }

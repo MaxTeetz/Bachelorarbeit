@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foldAR.data.DatabaseViewModel
 import com.example.foldAR.data.entities.DataSet
+import com.example.foldAR.data.entities.DataSetFragmentMotionEvent
+import com.example.foldAR.data.entities.DataSetGlSurfaceViewMotionEvent
 import com.example.foldAR.data.entities.Scenario
 import com.example.foldAR.data.entities.TestCase
 import com.example.foldAR.data.entities.User
@@ -42,6 +44,8 @@ class MainActivityViewModel : ViewModel() {
 
     private var update = false
     private val dataSetList: CopyOnWriteArrayList<DataSet> = CopyOnWriteArrayList()
+    private val motionEventFragmentList: CopyOnWriteArrayList<DataSetFragmentMotionEvent> = CopyOnWriteArrayList()
+    private val motionEventGlSurfaceList: CopyOnWriteArrayList<DataSetGlSurfaceViewMotionEvent> = CopyOnWriteArrayList()
 
     private var _currentUser: MutableLiveData<User?> = MutableLiveData(null)
     val currentUser get() = _currentUser
@@ -54,12 +58,6 @@ class MainActivityViewModel : ViewModel() {
 
     private var _dataBaseObjectsSet: MutableLiveData<Boolean> = MutableLiveData(false)
     val dataBaseObjectsSet get() = _dataBaseObjectsSet
-
-    private var _currentMotionEventSurfaceView: MotionEvent? = null
-    val currentMotionEventSurfaceView get() = _currentMotionEventSurfaceView
-
-    private var _currentMotionEventMap: MotionEvent? = null
-    val currentMotionEventMap get() = _currentMotionEventMap
 
     //Dialog variables
     private var _finished: MutableLiveData<Finished> = MutableLiveData(Finished.NOTFINISHED)
@@ -74,7 +72,7 @@ class MainActivityViewModel : ViewModel() {
     private var _startingDegree: Float = 0f
     private val startingDegree get() = _startingDegree
 
-    private val maxDistance = 0.5
+    private val maxDistance = 1.0
     private val maxRotation = 0.349065f
 
     //set false if new ui is loaded
@@ -501,10 +499,8 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-    fun insertMotionEvent(time: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            database
-        }
+    fun insertMotionEventFragment(event: MotionEvent){
+
     }
 
     fun setStartingVariables() {

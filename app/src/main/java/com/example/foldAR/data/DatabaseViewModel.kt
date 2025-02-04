@@ -4,12 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foldAR.data.daos.DataSetsDAO
-import com.example.foldAR.data.daos.MotionEventsDAO
+import com.example.foldAR.data.daos.MotionEventsFragmentDAO
+import com.example.foldAR.data.daos.MotionEventsGlSurfaceDAO
 import com.example.foldAR.data.daos.ScenariosDAO
 import com.example.foldAR.data.daos.TestCaseDAO
 import com.example.foldAR.data.daos.UsersDAO
-import com.example.foldAR.data.entities.DataMotionEvents
 import com.example.foldAR.data.entities.DataSet
+import com.example.foldAR.data.entities.DataSetFragmentMotionEvent
 import com.example.foldAR.data.entities.Scenario
 import com.example.foldAR.data.entities.TestCase
 import com.example.foldAR.data.entities.User
@@ -22,7 +23,8 @@ class DatabaseViewModel(
     private val scenariosDAO: ScenariosDAO,
     private val testCaseDAO: TestCaseDAO,
     private val dataSetsDAO: DataSetsDAO,
-    private val motionEventsDAO: MotionEventsDAO
+    private val motionEventsFragmentDAO: MotionEventsFragmentDAO,
+    private val motionEventsGlSurfaceDAO: MotionEventsGlSurfaceDAO
 ) : ViewModel() {
 
     suspend fun insertUser(user: User) {
@@ -44,9 +46,9 @@ class DatabaseViewModel(
         }
     }
 
-    fun insertMotionEventData(motionEventData: DataMotionEvents) {
+    fun insertMotionEventData(motionEventData: List<DataSetFragmentMotionEvent>) {
         viewModelScope.launch(Dispatchers.IO) {
-            motionEventsDAO.insertMotionEventData(motionEventData)
+            motionEventsFragmentDAO.insertMotionEventFragmentData(motionEventData)
         }
     }
 
@@ -71,7 +73,7 @@ class DatabaseViewModel(
 
     fun deleteMotionEventData(testCaseId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            motionEventsDAO.deleteMotionEventsDataForTestCase(testCaseId)
+            motionEventsFragmentDAO.deleteMotionEventsFragmentDataForTestCase(testCaseId)
         }
     }
 
@@ -111,7 +113,8 @@ class DatabaseViewModelFactory(
     private val scenariosDAO: ScenariosDAO,
     private val testCaseDAO: TestCaseDAO,
     private val dataSetsDAO: DataSetsDAO,
-    private val motionEventsDAO: MotionEventsDAO
+    private val motionEventsFragmentDAO: MotionEventsFragmentDAO,
+    private val motionEventsGlSurfaceDAO: MotionEventsGlSurfaceDAO
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(DatabaseViewModel::class.java)) {
@@ -121,7 +124,8 @@ class DatabaseViewModelFactory(
                 scenariosDAO,
                 testCaseDAO,
                 dataSetsDAO,
-                motionEventsDAO
+                motionEventsFragmentDAO,
+                motionEventsGlSurfaceDAO
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

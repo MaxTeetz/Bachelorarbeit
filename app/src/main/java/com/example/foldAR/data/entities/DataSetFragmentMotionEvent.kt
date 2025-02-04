@@ -13,7 +13,7 @@ import androidx.room.PrimaryKey
         onDelete = ForeignKey.CASCADE
     )], indices = [Index(value = ["TestCaseID"])]
 )
-data class DataMotionEvents(
+data class DataSetFragmentMotionEvent(
     @PrimaryKey(autoGenerate = true) val MotionEventID: Int = 0,
     val TestCaseID : Int,
     val Time: Long,
