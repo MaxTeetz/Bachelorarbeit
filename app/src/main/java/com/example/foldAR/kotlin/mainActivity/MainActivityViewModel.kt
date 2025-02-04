@@ -296,7 +296,7 @@ class MainActivityViewModel : ViewModel() {
             val z1 = (sin(rotation) * newX + cos(rotation) * newZ)
 
             renderer.moveAnchorPlane(x1 + camPos.tx(), -z1 + camPos.tz(), 1)
-            renderer.moveAnchorHeight((camPos.ty() + newY), 0)
+            renderer.moveAnchorHeight((camPos.ty() + newY), 1)
         }
     }
 
