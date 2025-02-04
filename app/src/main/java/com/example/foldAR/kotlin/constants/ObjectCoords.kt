@@ -4,7 +4,7 @@ object ObjectCoords {
     val positions: List<Triple<Double, Double, Double>> = listOf(
         //Left/Right, Front/Back, Height
         //First one is always to make the user get used to the scenario. Do NOT include into Data analysis
-        Triple(-1.0, -0.0, -1.0),
+        Triple(-1.0, -0.0, -0.0),
 
         //Vorne
         Triple(0.0, -3.0, 1.0),
