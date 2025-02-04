@@ -198,6 +198,7 @@ class MainActivity : AppCompatActivity() {
             val time = System.currentTimeMillis()
             viewModel.insertDataSet(time)
             viewModel.setRotationAngle()
+            viewModel.insertDataSetsToDatabase()
         }
     }
 

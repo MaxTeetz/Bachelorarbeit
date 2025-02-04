@@ -19,7 +19,7 @@ import com.example.foldAR.data.entities.User
 
 @Database(
     entities = [User::class, Scenario::class, TestCase::class, DataSet::class, DataSetFragmentMotionEvent::class, DataSetGlSurfaceViewMotionEvent::class],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

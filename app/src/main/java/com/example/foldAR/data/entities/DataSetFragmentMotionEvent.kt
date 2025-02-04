@@ -15,8 +15,13 @@ import androidx.room.PrimaryKey
 )
 data class DataSetFragmentMotionEvent(
     @PrimaryKey(autoGenerate = true) val MotionEventID: Int = 0,
-    val TestCaseID : Int,
+    val TestCaseID: Int,
     val Time: Long,
-    //TODO
-    val Event: String?
+    val Action: Int,
+    val PointerCount: Int,
+    val ActionIndex: Int,
+    val FirstFingerX: Float?,
+    val FirstFingerY: Float?,
+    val SecondFingerX: Float?,
+    val SecondFingerY: Float?
 )

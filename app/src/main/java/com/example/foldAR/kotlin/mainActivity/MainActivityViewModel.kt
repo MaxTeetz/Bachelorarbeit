@@ -44,8 +44,10 @@ class MainActivityViewModel : ViewModel() {
 
     private var update = false
     private val dataSetList: CopyOnWriteArrayList<DataSet> = CopyOnWriteArrayList()
-    private val motionEventFragmentList: CopyOnWriteArrayList<DataSetFragmentMotionEvent> = CopyOnWriteArrayList()
-    private val motionEventGlSurfaceList: CopyOnWriteArrayList<DataSetGlSurfaceViewMotionEvent> = CopyOnWriteArrayList()
+    private val motionEventFragmentList: CopyOnWriteArrayList<DataSetFragmentMotionEvent> =
+        CopyOnWriteArrayList()
+    private val motionEventGlSurfaceList: CopyOnWriteArrayList<DataSetGlSurfaceViewMotionEvent> =
+        CopyOnWriteArrayList()
 
     private var _currentUser: MutableLiveData<User?> = MutableLiveData(null)
     val currentUser get() = _currentUser
@@ -347,8 +349,10 @@ class MainActivityViewModel : ViewModel() {
             createTestCase()
         } else {
             if (currentTestCase.value!!.EndTime == null) {
-                database.deleteDataSet(currentTestCase.value!!.TestCaseID)
-                database.deleteMotionEventData(currentTestCase.value!!.TestCaseID)
+                val id = currentTestCase.value!!.TestCaseID
+                database.deleteDataSet(id)
+                database.deleteFragmentDataSet(id)
+                database.deleteGlSurfaceDataSet(id)
                 _targetIndex.value = currentTestCase.value!!.TestCaseName
 
                 //only true in case that its after app start and not in between rounds
@@ -485,22 +489,112 @@ class MainActivityViewModel : ViewModel() {
                 )
             )
         }
+    }
 
-        if (dataSetList.size >= 30 || (dataSetList.isNotEmpty() && !update)) {
-            insertDataSetToDatabase(dataSetList.toList())
-            Log.d(TAG, dataSetList.size.toString())
-            dataSetList.clear()
+    //Todo written at 2.30am. Blooob
+    fun insertMotionEventFragment(event: MotionEvent) {
+
+        if (update) {
+            val time = event.eventTime
+            val action = event.actionMasked
+            val pointerCount = event.pointerCount
+            val actionIndex = event.actionIndex
+            val firstX = event.getX(0)
+            val firstY = event.getY(0)
+            var secondX: Float? = null
+            var secondY: Float? = null
+
+            if (pointerCount > 1) {
+                secondX = event.getX(1)
+                secondY = event.getY(1)
+            }
+
+            motionEventFragmentList.add(
+                DataSetFragmentMotionEvent(
+                    TestCaseID = currentTestCase.value!!.TestCaseID,
+                    Time = time,
+                    Action = action,
+                    PointerCount = pointerCount,
+                    ActionIndex = actionIndex,
+                    FirstFingerX = firstX,
+                    FirstFingerY = firstY,
+                    SecondFingerX = secondX,
+                    SecondFingerY = secondY
+                )
+            )
         }
     }
 
-    private fun insertDataSetToDatabase(list: List<DataSet>) {
+    fun insertMotionEventGlSurfce(event: MotionEvent) {
+
+        if (update) {
+            val time = event.eventTime
+            val action = event.actionMasked
+            val pointerCount = event.pointerCount
+            val actionIndex = event.actionIndex
+            val firstX = event.getX(0)
+            val firstY = event.getY(0)
+            var secondX: Float? = null
+            var secondY: Float? = null
+
+            if (pointerCount > 1) {
+                secondX = event.getX(1)
+                secondY = event.getY(1)
+            }
+
+            motionEventGlSurfaceList.add(
+                DataSetGlSurfaceViewMotionEvent(
+                    TestCaseID = currentTestCase.value!!.TestCaseID,
+                    Time = time,
+                    Action = action,
+                    PointerCount = pointerCount,
+                    ActionIndex = actionIndex,
+                    FirstFingerX = firstX,
+                    FirstFingerY = firstY,
+                    SecondFingerX = secondX,
+                    SecondFingerY = secondY
+                )
+            )
+        }
+    }
+
+    fun insertDataSetsToDatabase() {
+
+        if (dataSetList.size >= 30 || (dataSetList.isNotEmpty() && !update)) {
+            insertDataSetsIntoDB(dataSetList.toList())
+            Log.d(TAG, "dataSet:    ${dataSetList.size}")
+            dataSetList.clear()
+        }
+
+        if (motionEventFragmentList.size >= 30 || (motionEventFragmentList.isNotEmpty() && !update)) {
+            insertFragmentDataSetsIntoDB(motionEventFragmentList.toList())
+            Log.d(TAG, "fragmentData:   ${motionEventFragmentList.size}")
+            motionEventFragmentList.clear()
+        }
+
+        if (motionEventGlSurfaceList.size >= 30 || (motionEventGlSurfaceList.isNotEmpty() && !update)) {
+            insertGlSurfaceDataSetsIntoDB(motionEventGlSurfaceList.toList())
+            Log.d(TAG, "glSurface:  ${motionEventGlSurfaceList.size}")
+            motionEventGlSurfaceList.clear()
+        }
+    }
+
+    private fun insertDataSetsIntoDB(list: List<DataSet>) {
         viewModelScope.launch(Dispatchers.IO) {
             database.insertDataSets(list)
         }
     }
 
-    fun insertMotionEventFragment(event: MotionEvent){
+    private fun insertFragmentDataSetsIntoDB(list: List<DataSetFragmentMotionEvent>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.insertMotionEventFragmentData(list)
+        }
+    }
 
+    private fun insertGlSurfaceDataSetsIntoDB(list: List<DataSetGlSurfaceViewMotionEvent>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.insertMotionEventGlSurfaceData(list)
+        }
     }
 
     fun setStartingVariables() {

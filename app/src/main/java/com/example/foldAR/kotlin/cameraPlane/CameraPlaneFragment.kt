@@ -84,6 +84,8 @@ class CameraPlaneFragment : Fragment() {
         binding.imageMoveObjectPlane.setOnTouchListener { view, event ->
             viewModelActivity.renderer.wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
 
+                viewModelActivity.insertMotionEventFragment(event)
+
                 if (event.pointerCount != previousCount) {
                     previousCount = event.pointerCount
                 }

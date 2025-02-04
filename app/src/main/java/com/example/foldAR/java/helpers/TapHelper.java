@@ -76,6 +76,8 @@ public final class TapHelper implements OnTouchListener {
   @Override
   public boolean onTouch(View view, MotionEvent motionEvent) {
 
+      viewModel.insertMotionEventGlSurfce(motionEvent);
+      
       if(this.scenario == Scenarios.STATEOFTHEART)
           viewModel.glSurfaceViewStateOfTheArt(motionEvent, placement);
       else

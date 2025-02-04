@@ -11,6 +11,7 @@ import com.example.foldAR.data.daos.TestCaseDAO
 import com.example.foldAR.data.daos.UsersDAO
 import com.example.foldAR.data.entities.DataSet
 import com.example.foldAR.data.entities.DataSetFragmentMotionEvent
+import com.example.foldAR.data.entities.DataSetGlSurfaceViewMotionEvent
 import com.example.foldAR.data.entities.Scenario
 import com.example.foldAR.data.entities.TestCase
 import com.example.foldAR.data.entities.User
@@ -46,9 +47,15 @@ class DatabaseViewModel(
         }
     }
 
-    fun insertMotionEventData(motionEventData: List<DataSetFragmentMotionEvent>) {
+    fun insertMotionEventFragmentData(motionEventData: List<DataSetFragmentMotionEvent>) {
         viewModelScope.launch(Dispatchers.IO) {
             motionEventsFragmentDAO.insertMotionEventFragmentData(motionEventData)
+        }
+    }
+
+    fun insertMotionEventGlSurfaceData(motionEventData: List<DataSetGlSurfaceViewMotionEvent>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            motionEventsGlSurfaceDAO.insertMotionEventGlSurfaceData(motionEventData)
         }
     }
 
@@ -71,9 +78,15 @@ class DatabaseViewModel(
         }
     }
 
-    fun deleteMotionEventData(testCaseId: Int) {
+    fun deleteFragmentDataSet(testCaseId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             motionEventsFragmentDAO.deleteMotionEventsFragmentDataForTestCase(testCaseId)
+        }
+    }
+
+    fun deleteGlSurfaceDataSet(testCaseId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            motionEventsGlSurfaceDAO.deleteMotionEventsGlSurfaceDataForTestCase(testCaseId)
         }
     }
 
