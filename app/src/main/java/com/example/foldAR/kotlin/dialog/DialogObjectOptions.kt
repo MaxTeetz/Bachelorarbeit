@@ -1,24 +1,21 @@
 package com.example.foldAR.kotlin.dialog
 
-import android.annotation.SuppressLint
-import android.graphics.Canvas
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.RecyclerView
-import com.example.foldAR.kotlin.adapter.ObjectAdapter
-import com.example.foldAR.kotlin.helloar.R
+import androidx.lifecycle.lifecycleScope
 import com.example.foldAR.kotlin.helloar.databinding.DialogObjectOptionsBinding
-import com.example.foldAR.kotlin.helperClasses.ColorGradingDelete
-import com.example.foldAR.kotlin.helperClasses.SwipeBackgroundHelper
+import com.example.foldAR.kotlin.mainActivity.MainActivity
 import com.example.foldAR.kotlin.mainActivity.MainActivityViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class DialogObjectOptions : DialogFragment() {
 
@@ -28,11 +25,12 @@ class DialogObjectOptions : DialogFragment() {
         }
     }
 
+    private lateinit var activity: MainActivity
+
     private var _binding: DialogObjectOptionsBinding? = null
     private val binding get() = _binding!!
 
     private val viewModelMainActivity: MainActivityViewModel by activityViewModels()
-    private lateinit var objectAdapter: ObjectAdapter
 
     private var displayWidth: Int? = null
 
@@ -46,9 +44,12 @@ class DialogObjectOptions : DialogFragment() {
 
             val params = attributes
             params.gravity = Gravity.TOP
-            params.y = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 125f, resources.displayMetrics).toInt()
+            params.y = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                125f,
+                resources.displayMetrics
+            ).toInt()
             attributes = params
-
         }
     }
 
@@ -58,111 +59,98 @@ class DialogObjectOptions : DialogFragment() {
         savedInstanceState: Bundle?,
     ): View {
         _binding = DialogObjectOptionsBinding.inflate(inflater, container, false)
+        activity = requireActivity() as MainActivity
+
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setAdapter()
-        bindingRecyclerViewObjects()
-        setObjectObserver()
-        setSliderObserver()
-        swipeToDelete()
-        deleteAllObjects()
+
+        setUpListener()
+
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    private fun deleteAllObjects() {
-        binding.deleteAll.setOnClickListener{
-            val size = viewModelMainActivity.renderer.wrappedAnchors.size
-            viewModelMainActivity.renderer.wrappedAnchors.clear()
-            objectAdapter.notifyItemRangeRemoved(0, size)
+    private fun setUpListener() {
+        binding.startTesting.setOnClickListener {
+            checkUser()
         }
+    }
+
+    private fun checkUser() {
+        val name = binding.name.text.toString()
+        if (viewModelMainActivity.renderer.wrappedAnchors.isEmpty()) {
+            makeToast("Erst Objekt platzieren!")
+        } else {
+            if (viewModelMainActivity.currentUser.value != null) {
+                showAlert()
+            } else {
+
+                lifecycleScope.launch(Dispatchers.Main) {
+
+                    if (name.isEmpty())
+                        makeToast("Erst Namen eingeben")
+                    else {
+                        viewModelMainActivity.currentTestCase.observe(viewLifecycleOwner) { testcase ->
+                            if (testcase != null) {
+                                showAlert()
+                                viewModelMainActivity.currentTestCase.removeObservers(
+                                    viewLifecycleOwner
+                                )
+                            }
+                        }
+                        viewModelMainActivity.insertUser(name)
+                    }
+                }
+            }
+        }
+    }
+
+
+    private fun makeToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+    }
+
+    private fun showAlert() {
+
+        val scenario = viewModelMainActivity.currentScenario.value!!.ScenarioCase
+        val message: String = if (viewModelMainActivity.currentTestCase.value!!.TestCaseName == 1) {
+            "Testrunde. Klicke auf den Haken, wenn du mit der Steuerung von $scenario vertraut bist!"
+        } else
+            "Die nächste Runde ist $scenario"
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(android.R.string.dialog_alert_title))
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton("Nächste Runde") { dialogInterface, _ ->
+                dialogInterface.dismiss()
+                viewModelMainActivity.updateTestCaseStartTime()
+                startUI()
+            }
+            .show()
+    }
+
+
+    private fun startUI() {
+
+        viewModelMainActivity.setStartingVariables()
+        viewModelMainActivity.setDatabaseObjectsSet(false)
+        viewModelMainActivity.createTarget()
+        viewModelMainActivity.placeTargetOnNewPosition()
+        viewModelMainActivity.placeObjectInFocus()
+
+        this.dismiss()
+
+    }
+
+    override fun onDestroyView() {
+        viewModelMainActivity.currentTestCase.removeObservers(viewLifecycleOwner)
+        super.onDestroyView()
     }
 
     override fun onResume() {
         super.onResume()
         displayWidth = dialog?.window?.attributes?.width
-    }
-
-    private fun setAdapter() {
-        objectAdapter = ObjectAdapter(object : ObjectAdapter.ClickListenerButton {
-            override fun onItemClicked(position: Int) {
-                objectAdapter.notifyItemChanged(viewModelMainActivity.currentPosition.value!!)
-                viewModelMainActivity.setPosition(position)
-                objectAdapter.notifyItemChanged(position)
-            }
-        }, viewModelMainActivity)
-    }
-
-    private fun bindingRecyclerViewObjects() {
-        binding.objectList.apply {
-            adapter = objectAdapter
-            layoutManager = GridLayoutManager(this.context, 1)
-            setHasFixedSize(true)
-        }
-    }
-
-    private fun setObjectObserver() {
-        viewModelMainActivity.renderer.wrappedAnchorsLiveData.observe(this.viewLifecycleOwner) { wrappedAnchors ->
-            objectAdapter.submitList(wrappedAnchors)
-        }
-    }
-
-    private fun setSliderObserver() {
-        binding.slider.value = viewModelMainActivity.scale.value!!
-        binding.slider.addOnChangeListener { _, value, _ ->
-            viewModelMainActivity.setScale(value)
-        }
-    }
-
-    private fun swipeToDelete() {
-        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder,
-            ): Boolean {
-                return false
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val position = viewHolder.adapterPosition
-                viewModelMainActivity.deleteObject(position)
-                objectAdapter.notifyItemRemoved(position)
-            }
-
-            override fun onChildDraw(
-                c: Canvas,
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                dX: Float,
-                dY: Float,
-                actionState: Int,
-                isCurrentlyActive: Boolean,
-            ) {
-                val colorGradingDelete = ColorGradingDelete(displayWidth!!)
-
-                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-                    val viewItem = viewHolder.itemView
-                    SwipeBackgroundHelper.paintDrawCommandToStart(
-                        c,
-                        viewItem,
-                        R.drawable.trash,
-                        dX,
-                        colorGradingDelete
-                    )
-                }
-                super.onChildDraw(
-                    c,
-                    recyclerView,
-                    viewHolder,
-                    dX,
-                    dY,
-                    actionState,
-                    isCurrentlyActive
-                )
-            }
-        }).attachToRecyclerView(binding.objectList)
     }
 }

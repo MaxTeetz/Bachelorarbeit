@@ -3,6 +3,7 @@ package com.example.foldAR.java.samplerender;
 import android.content.res.AssetManager;
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -32,6 +33,8 @@ public class SampleRender {
         new GLSurfaceView.Renderer() {
           @Override
           public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+            Log.d("RendererInputFileCheck", "Renderer");
+
             GLES30.glEnable(GLES30.GL_BLEND);
             GLError.maybeThrowGLException("Failed to enable blending", "glEnable");
             renderer.onSurfaceCreated(SampleRender.this);

@@ -5,29 +5,42 @@
     android:layout_height="match_parent"
     android:background="@drawable/dialog_background">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/object_list"
+    <TextView
+        android:id="@+id/progress"
         android:layout_width="match_parent"
-        android:layout_height="270dp"
-        android:layout_marginTop="10dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:text="@string/dr_cke_auf_start_um_den_test_zu_starten"
+        android:textSize="45sp"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/delete_all"
-        android:layout_width="123dp"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/name_label"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/red"
-        android:text="@string/delete_all"
+        android:layout_marginLeft="40dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginRight="40dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/object_list" />
+        app:layout_constraintTop_toBottomOf="@id/progress">
 
-    <com.google.android.material.slider.Slider
-        android:id="@+id/slider"
-        android:layout_width="match_parent"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:inputType="textEmailAddress" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/start_testing"
+        android:layout_width="123dp"
         android:layout_height="wrap_content"
-        android:valueFrom="1.0"
-        android:valueTo="5.0"
-        app:layout_constraintTop_toBottomOf="@id/delete_all" />
+        android:backgroundTint="@color/green"
+        android:text="@string/start"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/name_label" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

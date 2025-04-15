@@ -18,7 +18,7 @@ import com.example.foldAR.java.samplerender.VertexBuffer
 import com.example.foldAR.java.samplerender.arcore.BackgroundRenderer
 import com.example.foldAR.java.samplerender.arcore.PlaneRenderer
 import com.example.foldAR.java.samplerender.arcore.SpecularCubemapFilter
-import com.example.foldAR.kotlin.Constants
+import com.example.foldAR.kotlin.constants.Constants
 import com.example.foldAR.kotlin.helloar.R
 import com.example.foldAR.kotlin.mainActivity.MainActivity
 import com.google.ar.core.Anchor
@@ -36,14 +36,14 @@ import com.google.ar.core.TrackingFailureReason
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.NotYetAvailableException
-import com.google.ar.sceneform.math.Quaternion
-import com.google.ar.sceneform.math.Vector3
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.Collections
 import java.util.UUID
 import kotlin.math.PI
 import kotlin.math.atan2
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 /** Renders the HelloAR application using our example Renderer. */
 class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
@@ -101,13 +101,31 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     var lastPointCloudTimestamp: Long = 0
 
     // Virtual object (ARCore pawn)
-    lateinit var virtualObjectMesh: Mesh
-    lateinit var virtualObjectShader: Shader
-    lateinit var virtualObjectAlbedoTexture: Texture
-    lateinit var virtualObjectAlbedoInstantPlacementTexture: Texture
+    private lateinit var virtualObjectMesh: Mesh
+    private lateinit var virtualObjectShader: Shader
+    private lateinit var virtualObjectAlbedoTexture: Texture
+    private lateinit var virtualObjectAlbedoTextureAlt: Texture
+    private lateinit var virtualObjectAlbedoTextureFinish: Texture
+    private lateinit var virtualObjectAlbedoInstantPlacementTexture: Texture
+
+    lateinit var secondAnchor: WrappedAnchor
 
     val wrappedAnchors = Collections.synchronizedList(mutableListOf<WrappedAnchor>())
-    val wrappedAnchorsLiveData = MutableLiveData<List<WrappedAnchor>>()
+    private lateinit var idFirstAnchor: UUID
+
+    private var _reached: MutableLiveData<Boolean> = MutableLiveData(false)
+    val reached get() = _reached
+
+    private var done = true
+
+    private var _distance: Float = 10f
+    val distance get() = _distance
+
+    private var _timeDone: Long = 0
+    val timeDone get() = _timeDone
+
+    private var _distanceDone = 0f
+    val distanceDone get() = _distanceDone
 
     // Environmental HDR
     lateinit var dfgTexture: Texture
@@ -142,6 +160,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
     }
 
     override fun onSurfaceCreated(render: SampleRender) {
+
         // Prepare the rendering objects.
         // This involves reading shaders and 3D model files, so may throw an IOException.
         try {
@@ -197,25 +216,40 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             // Virtual object to render (ARCore pawn)
             virtualObjectAlbedoTexture = Texture.createFromAsset(
                 render,
-                "models/pawn_albedo.png",
+                "models/cube/manipulated_cube_albedo.png",
+                Texture.WrapMode.CLAMP_TO_EDGE,
+                Texture.ColorFormat.SRGB
+            )
+
+            virtualObjectAlbedoTextureAlt = Texture.createFromAsset(
+                render,
+                "models/cube/target_cube_albedo.png",
+                Texture.WrapMode.CLAMP_TO_EDGE,
+                Texture.ColorFormat.SRGB
+            )
+
+            virtualObjectAlbedoTextureFinish = Texture.createFromAsset(
+                render,
+                "models/cube/target_cube_finish_albedo.png",
                 Texture.WrapMode.CLAMP_TO_EDGE,
                 Texture.ColorFormat.SRGB
             )
 
             virtualObjectAlbedoInstantPlacementTexture = Texture.createFromAsset(
                 render,
-                "models/pawn_albedo_instant_placement.png",
+                "models/cube/manipulated_cube_transparent_albedo.png",
                 Texture.WrapMode.CLAMP_TO_EDGE,
                 Texture.ColorFormat.SRGB
             )
 
             val virtualObjectPbrTexture = Texture.createFromAsset(
                 render,
-                "models/pawn_roughness_metallic_ao.png",
+                "models/cube/cube_metallic_alt_albedo.png",
                 Texture.WrapMode.CLAMP_TO_EDGE,
                 Texture.ColorFormat.LINEAR
             )
-            virtualObjectMesh = Mesh.createFromAsset(render, "models/pawn.obj")
+            virtualObjectMesh =
+                Mesh.createFromAsset(render, "models/cube/manipulated_cube_transparent.obj")
             virtualObjectShader = Shader.createFromAssets(
                 render,
                 "shaders/environmental_hdr.vert",
@@ -351,12 +385,12 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
         }
 
         // Visualize planes.
-        planeRenderer.drawPlanes(
-            render,
-            session.getAllTrackables<Plane>(Plane::class.java),
-            camera.displayOrientedPose,
-            projectionMatrix
-        )
+//        planeRenderer.drawPlanes(
+//            render,
+//            session.getAllTrackables<Plane>(Plane::class.java),
+//            camera.displayOrientedPose,
+//            projectionMatrix
+//        )
 
         // -- Draw occluded virtual objects
 
@@ -365,7 +399,9 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
         // Visualize anchors created by touch.
         render.clear(virtualSceneFramebuffer, 0f, 0f, 0f, 0f)
-        for ((anchor, trackable) in wrappedAnchors.filter { it.anchor.trackingState == TrackingState.TRACKING }) {
+        wrappedAnchors.filter { (anchor, _) ->
+            anchor.trackingState == TrackingState.TRACKING
+        }.forEach { (anchor, trackable, id) ->
             // Get the current pose of an Anchor in world space. The Anchor pose is updated
             // during calls to session.update() as ARCore refines its estimate of the world.
             anchor.pose.toMatrix(modelMatrix, 0)
@@ -377,11 +413,20 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             // Update shader properties and draw
             virtualObjectShader.setMat4("u_ModelView", modelViewMatrix)
             virtualObjectShader.setMat4("u_ModelViewProjection", modelViewProjectionMatrix)
+            Log.d(TAG, "TextureTest")
+            //second anchor is manipulated one
             val texture =
                 if ((trackable as? InstantPlacementPoint)?.trackingMethod == InstantPlacementPoint.TrackingMethod.SCREENSPACE_WITH_APPROXIMATE_DISTANCE) {
                     virtualObjectAlbedoInstantPlacementTexture
                 } else {
-                    virtualObjectAlbedoTexture
+                    if (id == idFirstAnchor) {
+                        virtualObjectAlbedoTexture
+                    } else {
+                        if (done)
+                            virtualObjectAlbedoTextureAlt
+                        else
+                            virtualObjectAlbedoTextureFinish
+                    }
                 }
             virtualObjectShader.setTexture("u_AlbedoTexture", texture)
             render.draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
@@ -458,7 +503,6 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
         if (camera.trackingState != TrackingState.TRACKING) return
         val tap = activity.tapHelper.poll() ?: return
 
-        Log.d("wdgbzawid", "wdadwa")
         val hitResultList = if (activity.instantPlacementSettings.isInstantPlacementEnabled) {
             frame.hitTestInstantPlacement(tap.x, tap.y, APPROXIMATE_DISTANCE_METERS)
         } else {
@@ -481,32 +525,32 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             }
         }
 
-        if (firstHitResult != null && wrappedAnchors.size <= Constants.objectsMaxSize) {
+        if (firstHitResult != null && wrappedAnchors.size <= Constants.OBJECTS_MAX_SIZE) {
             // Cap the number of objects created. This avoids overloading both the
             // rendering system and ARCore.
             // Adding an Anchor tells ARCore that it should track this position in
             // space. This anchor is created on the Plane to place the 3D model
             // in the correct position relative both to the world and to the plane.
             val anchor = WrappedAnchor(firstHitResult.createAnchor(), firstHitResult.trackable)
+            secondAnchor = WrappedAnchor(firstHitResult.createAnchor(), firstHitResult.trackable)
 
             wrappedAnchors.add(anchor)
-            wrappedAnchorsLiveData.postValue(wrappedAnchors)
+            if (wrappedAnchors.size == 1)
+                idFirstAnchor = anchor.id
+
             // For devices that support the Depth API, shows a dialog to suggest enabling
             // depth-based occlusion. This dialog needs to be spawned on the UI thread.
             activity.runOnUiThread { activity.showOcclusionDialogIfNeeded() }
         }
     }
 
-    fun deleteAnchor(deletedObjectIndex: Int) {
-        wrappedAnchors[deletedObjectIndex].anchor.detach()
-        wrappedAnchors.removeAt(deletedObjectIndex)
-        wrappedAnchorsLiveData.value = wrappedAnchors
-    }
+    fun deleteAnchor() = wrappedAnchors.clear()
 
     private fun moveAnchor(moveX: Float, moveY: Float, moveZ: Float, position: Int) {
         wrappedAnchors.takeIf { it.isNotEmpty() }?.let {
 
             val rotationQuaternion = wrappedAnchors[position].anchor.pose.rotationQuaternion
+            val id = wrappedAnchors[position].id
             //combine new position and rotation
             val translation = Pose.makeTranslation(moveX, moveY, moveZ)
             val rotation = Pose.makeRotation(
@@ -517,38 +561,55 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             ) //just to make it look normal
             val newPose = translation.compose(rotation)
 
-            wrappedAnchors[position].anchor.detach() //Todo optional?
+            wrappedAnchors[position].anchor.detach() //Todo error if no valid session camera obstructed or something like that
             //add to list
-            val newAnchor =
-                WrappedAnchor(session!!.createAnchor(newPose), wrappedAnchors[position].trackable)
 
-            wrappedAnchors[position] = newAnchor
+            try {
+                session?.let {
+                    val newAnchor =
+                        WrappedAnchor(
+                            session!!.createAnchor(newPose),
+                            wrappedAnchors[position].trackable,
+                            id
+                        )
+
+                    wrappedAnchors[position] = newAnchor
+
+                } ?: Log.e("MoveAnchor", "Session is null or invalid")
+            } catch (e: Exception) {
+                Log.e("MoveAnchor", "Failed to create new Anchor", e)
+            }
+
+            if (wrappedAnchors.size >= 2)
+                calculateDistance()
+
+            if (this.distance < 0.1 && done) {
+                _timeDone = System.currentTimeMillis()
+                _distanceDone = distance
+                done = false
+            }
         }
     }
 
-    fun rotateAnchor(rotation: Float, position: Int) {
+    private fun calculateDistance() {
+        val a = wrappedAnchors[0].anchor.pose
+        val b = wrappedAnchors[1].anchor.pose
 
-        val pose = wrappedAnchors[position].anchor.pose
-        val translation = Pose.makeTranslation(pose.tx(), pose.ty(), pose.tz())
+        this._distance =
+            sqrt((b.tx() - a.tx()).pow(2) + (b.ty() - a.ty()).pow(2) + (b.tz() - a.tz()).pow(2))
+    }
 
+    fun reachedTrue() {
+        _reached.value = true
+        done = true
+    }
 
-        val rotationQuaternion = Quaternion.axisAngle(Vector3(0f, 1f, 0f), rotation)
-        //rotate it here
-
-        val rotatedPose = Pose.makeRotation(
-            rotationQuaternion.x,
-            rotationQuaternion.y,
-            rotationQuaternion.z,
-            rotationQuaternion.w
-        )
-
-        val newPose = translation.compose(rotatedPose)
-
-        wrappedAnchors[position] =
-            WrappedAnchor(session!!.createAnchor(newPose), wrappedAnchors[position].trackable)
+    fun resetReached() {
+        this._reached.value = false
     }
 
     fun moveAnchorPlane(moveX: Float, moveZ: Float, position: Int) {
+
         moveAnchor(
             moveX,
             wrappedAnchors[position].anchor.pose.ty(),
@@ -579,6 +640,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 
     private fun showError(errorMessage: String) =
         activity.snackbarHelper.showError(activity, errorMessage)
+
 }
 
 /**
@@ -588,5 +650,5 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
 data class WrappedAnchor(
     val anchor: Anchor,
     val trackable: Trackable,
-    val id: UUID = UUID.randomUUID()
+    val id: UUID = UUID.randomUUID(),
 )
