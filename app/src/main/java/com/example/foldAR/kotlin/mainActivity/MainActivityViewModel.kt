@@ -182,7 +182,6 @@ class MainActivityViewModel : ViewModel() {
 
     private fun oneFinger(event: MotionEvent) {
 
-
         if (event.action == MotionEvent.ACTION_DOWN || !firstFinger) {
             this.initialX = event.x
             this.initialY = event.y
@@ -198,7 +197,6 @@ class MainActivityViewModel : ViewModel() {
             glSurfaceViewChangeAnchor(event)
         }
         firstFinger = true
-
     }
 
     private fun twoFingers(event: MotionEvent) {
@@ -495,7 +493,7 @@ class MainActivityViewModel : ViewModel() {
     fun insertMotionEventFragment(event: MotionEvent) {
 
         if (update) {
-            val time = event.eventTime
+            val time = System.currentTimeMillis()
             val action = event.actionMasked
             val pointerCount = event.pointerCount
             val actionIndex = event.actionIndex
@@ -528,7 +526,7 @@ class MainActivityViewModel : ViewModel() {
     fun insertMotionEventGlSurfce(event: MotionEvent) {
 
         if (update) {
-            val time = event.eventTime
+            val time = System.currentTimeMillis()
             val action = event.actionMasked
             val pointerCount = event.pointerCount
             val actionIndex = event.actionIndex

@@ -90,7 +90,7 @@ class DialogObjectOptions : DialogFragment() {
 
                     if (name.isEmpty())
                         makeToast("Erst Namen eingeben")
-                    else { //TODO if user is created after another one finishes a dialog appears with endTarget as Text
+                    else {
                         viewModelMainActivity.currentTestCase.observe(viewLifecycleOwner) { testcase ->
                             if (testcase != null) {
                                 showAlert()

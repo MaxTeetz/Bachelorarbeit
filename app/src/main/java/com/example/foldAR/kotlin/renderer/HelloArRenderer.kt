@@ -414,6 +414,7 @@ class HelloArRenderer(val activity: MainActivity) : SampleRender.Renderer,
             virtualObjectShader.setMat4("u_ModelView", modelViewMatrix)
             virtualObjectShader.setMat4("u_ModelViewProjection", modelViewProjectionMatrix)
             Log.d(TAG, "TextureTest")
+            //second anchor is manipulated one
             val texture =
                 if ((trackable as? InstantPlacementPoint)?.trackingMethod == InstantPlacementPoint.TrackingMethod.SCREENSPACE_WITH_APPROXIMATE_DISTANCE) {
                     virtualObjectAlbedoInstantPlacementTexture
